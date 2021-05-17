@@ -14,7 +14,7 @@ struct ResDicNode{
 class ResDic{
 public:
 	ResDicNode* Entries() { return reinterpret_cast<ResDicNode*>(this + 1); }
-	ResDicNode* GetEntry(u32 i) {return &m_root+i; }
+	//ResDicNode* GetEntry(u32 i) {return &m_root+i; }
 	inline s32 Find(const TStringView& str){
 		auto* found_node = FindNode(str);
 		if(!str.Equals(*found_node->m_str)) return -1;
@@ -22,9 +22,9 @@ public:
 		return found_node - Entries();
 	}
 	inline ResDicNode* FindNode(const TStringView& str){
-		ResDicNode* current = GetEntry(0);
+		ResDicNode* current = &m_root;
 		u32 next_idx = current->m_next_idx[0];
-		ResDicNode* next = GetEntry(next_idx);
+		ResDicNode* next = &m_root+next_idx;
 		
 		while(current->m_compact_bit_index < next->m_compact_bit_index){
 			s32 bit_idx = next->m_compact_bit_index;
@@ -34,9 +34,9 @@ public:
 			}else{
 				which_idx = (str.Cstr()[str.Len() + ~(bit_idx>>3)] >> (bit_idx & 7)) & 1;
 			}
-			current = GetEntry(next_idx);
+			current = &m_root+next_idx;
 			next_idx = current->m_next_idx[which_idx];
-			next = GetEntry(next_idx);
+			next = &m_root+next_idx;
 		}
 		return next;
 	}
