@@ -3,7 +3,7 @@ project(EventFlow CXX ASM)
 add_library(evfl OBJECT
   include/evfl/param.h
   include/evfl/query.h
-  include/evfl/types.h
+  include/ore/Types.h
   src/dummy.cpp
 )
 
