@@ -7,6 +7,7 @@ add_library(evfl OBJECT
   include/ore/BitUtils.h
   include/ore/StringView.h
   include/ore/Types.h
+  src/ore/BitUtils.cpp
   src/ore/BinaryFileHeader.cpp
 )
 

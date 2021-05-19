@@ -70,7 +70,7 @@ void BinaryFileHeader::SetFileSize(int size) {
 }
 
 void BinaryFileHeader::SetAlignment(int alignment_) {
-    alignment = Log2ForPowerOf2(alignment_);
+    alignment = CountTrailingZeros(u32(alignment_));
 }
 
 std::pair<const char*, size_t> BinaryFileHeader::GetFileName() const {
