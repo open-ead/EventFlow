@@ -5,10 +5,16 @@ add_library(evfl OBJECT
   include/evfl/query.h
   include/ore/BinaryFileHeader.h
   include/ore/BitUtils.h
+  include/ore/EnumUtil.h
+  include/ore/IterRange.h
+  include/ore/ResDic.h
+  include/ore/ResMetaData.h
   include/ore/StringView.h
   include/ore/Types.h
   src/ore/BitUtils.cpp
+  src/ore/EnumUtil.cpp
   src/ore/BinaryFileHeader.cpp
+  src/ore/ResDic.cpp
 )
 
 target_compile_options(evfl PRIVATE -fno-exceptions)

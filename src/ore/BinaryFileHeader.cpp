@@ -73,12 +73,11 @@ void BinaryFileHeader::SetAlignment(int alignment_) {
     alignment = CountTrailingZeros(u32(alignment_));
 }
 
-std::pair<const char*, size_t> BinaryFileHeader::GetFileName() const {
-    if (file_name_offset == 0)
-        return {};
-
-    const char* ptr = reinterpret_cast<const char*>(this) + file_name_offset;
-    return {ptr, StringLength(ptr)};
+StringView BinaryFileHeader::GetFileName() const {
+    StringView name;
+    if (file_name_offset != 0)
+        name = reinterpret_cast<const char*>(this) + file_name_offset;
+    return name;
 }
 
 void BinaryFileHeader::SetFileName(const StringView& name) {

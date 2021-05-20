@@ -38,7 +38,7 @@ struct BinaryFileHeader {
     int GetFileSize() const;
     void SetFileSize(int size);
 
-    std::pair<const char*, size_t> GetFileName() const;
+    StringView GetFileName() const;
     void SetFileName(const StringView& name);
 
     RelocationTable* GetRelocationTable();
