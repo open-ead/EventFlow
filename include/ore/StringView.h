@@ -25,15 +25,15 @@ public:
 
     /// @param data A null-terminated string. Must not be nullptr.
     // NOLINTNEXTLINE(google-explicit-constructor)
-    constexpr TStringView(const char* data) : m_data(data), m_len(StringLength(data)) {}
+    TStringView(const char* data) : m_data(data), m_len(StringLength(data)) {}
 
     constexpr const T* data() const { return m_data; }
-    constexpr u32 size() const { return static_cast<u32>(m_len); }
+    constexpr u32 size() const { return m_len; }
     constexpr bool empty() const { return size() == 0; }
 
 private:
     const T* m_data{};
-    size_t m_len{};
+    u32 m_len{};
 };
 
 using StringView = TStringView<char>;

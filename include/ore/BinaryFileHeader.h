@@ -2,6 +2,7 @@
 
 #include <ore/StringView.h>
 #include <ore/Types.h>
+#include <utility>
 
 namespace ore {
 
@@ -37,7 +38,7 @@ struct BinaryFileHeader {
     int GetFileSize() const;
     void SetFileSize(int size);
 
-    StringView GetFileName() const;
+    std::pair<const char*, size_t> GetFileName() const;
     void SetFileName(const StringView& name);
 
     RelocationTable* GetRelocationTable();
