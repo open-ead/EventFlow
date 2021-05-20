@@ -19,7 +19,9 @@ constexpr size_t StringLength(const T* str) {
 template <typename T>
 class TStringView {
 public:
-    constexpr TStringView() = default;
+    // Annoyingly enough, this cannot be defaulted (otherwise Clang will not dynamically
+    // initialize static StringView variables).
+    TStringView() {}
 
     constexpr TStringView(const char* data, size_t len) : m_data(data), m_len(len) {}
 
