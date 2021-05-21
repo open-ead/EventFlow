@@ -7,6 +7,7 @@ add_library(evfl OBJECT
   include/ore/BitUtils.h
   include/ore/EnumUtil.h
   include/ore/IterRange.h
+  include/ore/RelocationTable.h
   include/ore/ResDic.h
   include/ore/ResEndian.h
   include/ore/ResMetaData.h
@@ -16,8 +17,9 @@ add_library(evfl OBJECT
   src/ore/BitUtils.cpp
   src/ore/EnumUtil.cpp
   src/ore/BinaryFile.cpp
-  src/ore/ResDic.cpp
+  src/ore/RelocationTable.cpp
   src/ore/StringPool.cpp
+  src/ore/ResDic.cpp
 )
 
 target_compile_options(evfl PRIVATE -fno-exceptions)

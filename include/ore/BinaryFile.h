@@ -91,4 +91,6 @@ struct BinTPtr {
     u64 offset_or_ptr;
 };
 
+static_assert(sizeof(u64) >= sizeof(void*));
+
 }  // namespace ore
