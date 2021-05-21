@@ -9,12 +9,14 @@ add_library(evfl OBJECT
   include/ore/IterRange.h
   include/ore/ResDic.h
   include/ore/ResMetaData.h
+  include/ore/StringPool.h
   include/ore/StringView.h
   include/ore/Types.h
   src/ore/BitUtils.cpp
   src/ore/EnumUtil.cpp
   src/ore/BinaryFileHeader.cpp
   src/ore/ResDic.cpp
+  src/ore/StringPool.cpp
 )
 
 target_compile_options(evfl PRIVATE -fno-exceptions)
