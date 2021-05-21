@@ -2,7 +2,6 @@
 
 #include <ore/StringView.h>
 #include <ore/Types.h>
-#include <utility>
 
 namespace ore {
 
@@ -64,6 +63,32 @@ struct BinaryFileHeader {
     u16 first_block_offset;
     int relocation_table_offset;
     int file_size;
+};
+
+template <typename T>
+struct BinTString {
+    const T* data() const { return reinterpret_cast<const T*>(this + 1); }
+    const T& operator[](size_t idx) const { return data()[idx]; }
+
+    u16 length;
+};
+
+using BinString = BinTString<char>;
+using BinWString = BinTString<wchar_t>;
+
+template <typename T>
+struct BinTPtr {
+    void Clear();
+    void Set(T* ptr);
+    T* Get();
+    const T* Get() const;
+    void SetOffset(void* base, void* ptr);
+    u64 GetOffset() const;
+    const T* ToPtr(void* base) const;
+    void Relocate(void* base);
+    void Unrelocate(void* base);
+
+    u64 offset_or_ptr;
 };
 
 }  // namespace ore

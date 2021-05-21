@@ -50,5 +50,6 @@ private:
 };
 
 using StringView = TStringView<char>;
+using WStringView = TStringView<wchar_t>;
 
 }  // namespace ore

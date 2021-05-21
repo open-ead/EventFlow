@@ -1,5 +1,5 @@
 #include <cstdint>
-#include <ore/BinaryFileHeader.h>
+#include <ore/BinaryFile.h>
 #include <ore/BitUtils.h>
 
 namespace ore {

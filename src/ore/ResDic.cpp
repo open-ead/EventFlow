@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <ore/ResDic.h>
+#include <ore/ResEndian.h>
 
 namespace ore {
 
@@ -24,6 +25,26 @@ int ResDic::FindRefBit(const StringView& str1, const StringView& str2) {
     }
 
     return -1;
+}
+
+void SwapEndian(ResEndian* endian, ResDic* dic) {
+    const auto swap_entries = [&] {
+        const int num_entries = dic->num_entries + 1;
+        for (int i = 0; i < num_entries; ++i) {
+            ResDicEntry& entry = dic->GetEntries()[i];
+            SwapEndian(&entry.compact_bit_idx);
+            SwapEndian(&entry.next_indices[0]);
+            SwapEndian(&entry.next_indices[1]);
+        }
+    };
+
+    if (endian->is_serializing) {
+        swap_entries();
+        SwapEndian(&dic->num_entries);
+    } else {
+        SwapEndian(&dic->num_entries);
+        swap_entries();
+    }
 }
 
 }  // namespace ore
