@@ -5,6 +5,7 @@ add_library(evfl OBJECT
   include/evfl/query.h
   include/ore/BinaryFile.h
   include/ore/BitUtils.h
+  include/ore/Buffer.h
   include/ore/EnumUtil.h
   include/ore/IterRange.h
   include/ore/RelocationTable.h
