@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #endif
 
+#include <ore/Types.h>
+
 namespace ore {
 
 [[nodiscard]] inline u8 SwapEndian(u8 x) {
