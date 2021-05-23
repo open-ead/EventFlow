@@ -78,15 +78,28 @@ using BinWString = BinTString<wchar_t>;
 
 template <typename T>
 struct BinTPtr {
-    void Clear();
-    void Set(T* ptr);
-    T* Get();
-    const T* Get() const;
-    void SetOffset(void* base, void* ptr);
-    u64 GetOffset() const;
-    const T* ToPtr(void* base) const;
-    void Relocate(void* base);
-    void Unrelocate(void* base);
+    void Clear() { offset_or_ptr = 0; }
+    void Set(T* ptr) { offset_or_ptr = reinterpret_cast<u64>(ptr); }
+
+    // Only use this after relocation.
+    T* Get() { return reinterpret_cast<T*>(offset_or_ptr); }
+    const T* Get() const { return reinterpret_cast<const T*>(offset_or_ptr); }
+
+    void SetOffset(void* base, void* ptr) {
+        offset_or_ptr = static_cast<int>(ptr ? uintptr_t(ptr) - uintptr_t(base) : 0);
+    }
+
+    u64 GetOffset() const { return offset_or_ptr; }
+
+    T* ToPtr(void* base) const {
+        const auto offset = static_cast<int>(offset_or_ptr);
+        if (offset == 0)
+            return nullptr;
+        return reinterpret_cast<T*>(reinterpret_cast<char*>(base) + offset);
+    }
+
+    void Relocate(void* base) { Set(ToPtr(base)); }
+    void Unrelocate(void* base) { SetOffset(base, Get()); }
 
     u64 offset_or_ptr;
 };
