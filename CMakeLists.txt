@@ -4,6 +4,7 @@ add_library(evfl OBJECT
   include/evfl/param.h
   include/evfl/query.h
   include/ore/Allocator.h
+  include/ore/Array.h
   include/ore/BinaryFile.h
   include/ore/BitUtils.h
   include/ore/Buffer.h
