@@ -21,7 +21,7 @@ struct ResMetaData {
 
     ORE_ENUM(DataType, kArgument, kContainer, kInt, kBool, kFloat, kString, kWString, kIntArray, kBoolArray, kFloatArray, kStringArray, kWStringArray, kActorIdentifier)
 
-    SizedEnum<DataType::ValueType, u8> type;
+    SizedEnum<DataType::Type, u8> type;
     u16 num_items;
     BinTPtr<ResDic> dictionary;
     Value value;

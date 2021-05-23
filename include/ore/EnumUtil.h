@@ -40,7 +40,7 @@ private:
 #define ORE_ENUM(NAME, ...)                                                                        \
     class NAME {                                                                                   \
     public:                                                                                        \
-        enum ValueType { __VA_ARGS__ };                                                            \
+        enum Type { __VA_ARGS__ };                                                                 \
                                                                                                    \
         static void Init() {                                                                       \
             static ore::StringView names[cCount];                                                  \
