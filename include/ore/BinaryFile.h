@@ -2,8 +2,15 @@
 
 #include <ore/StringView.h>
 #include <ore/Types.h>
+#include <type_traits>
+#include <utility>
 
 namespace ore {
+
+template <typename T>
+constexpr T AlignUpToPowerOf2(T val, int base) {
+    return val + base - 1 & static_cast<unsigned int>(-base);
+}
 
 struct RelocationTable;
 
@@ -67,10 +74,38 @@ struct BinaryFileHeader {
 
 template <typename T>
 struct BinTString {
-    const T* data() const { return reinterpret_cast<const T*>(this + 1); }
+    T* data() { return chars; }
+    const T* data() const { return chars; }
+
+    T& operator[](size_t idx) { return data()[idx]; }
     const T& operator[](size_t idx) const { return data()[idx]; }
 
+    auto begin() { return data(); }
+    auto begin() const { return data(); }
+
+    auto end() { return data() + length; }
+    auto end() const { return data() + length; }
+
+    BinTString* NextString() { return const_cast<BinTString*>(std::as_const(*this).NextString()); }
+
+    const BinTString* NextString() const {
+        // XXX: this shouldn't have to be a separate case.
+        if constexpr (std::is_same_v<T, wchar_t>) {
+            const auto offset = ((2 + (4 * (length + 1) - 1)) & -4) + 2;
+            return reinterpret_cast<const BinTString*>(reinterpret_cast<const char*>(this) +
+                                                       offset);
+
+        } else {
+            // + 1 for the null terminator
+            const auto offset = offsetof(BinTString, chars) + sizeof(T) * (length + 1);
+            return reinterpret_cast<const BinTString*>(
+                reinterpret_cast<const char*>(this) +
+                AlignUpToPowerOf2(offset, alignof(BinTString)));
+        }
+    }
+
     u16 length;
+    T chars[1];
 };
 
 using BinString = BinTString<char>;

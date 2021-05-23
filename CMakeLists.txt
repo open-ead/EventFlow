@@ -23,6 +23,7 @@ add_library(evfl OBJECT
   src/ore/RelocationTable.cpp
   src/ore/StringPool.cpp
   src/ore/ResDic.cpp
+  src/ore/ResMetaData.cpp
 )
 
 target_compile_options(evfl PRIVATE -fno-exceptions)
