@@ -1,8 +1,8 @@
 project(EventFlow CXX ASM)
 
 add_library(evfl OBJECT
-  include/evfl/param.h
-  include/evfl/query.h
+  include/evfl/ParamAccessor.h
+  include/evfl/Query.h
   include/ore/Allocator.h
   include/ore/Array.h
   include/ore/BinaryFile.h
