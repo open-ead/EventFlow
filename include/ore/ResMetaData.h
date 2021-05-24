@@ -12,8 +12,8 @@ struct ResEndian;
 struct ResMetaData {
     union Value {
         BinTPtr<ResMetaData> container;
+        // Also used for booleans. Anything that is != 0 is treated as true.
         int i;
-        bool b;
         float f;
         BinTPtr<BinString> str;
         BinTPtr<BinWString> wstr;
@@ -25,6 +25,11 @@ struct ResMetaData {
     u16 num_items;
     BinTPtr<ResDic> dictionary;
     Value value;
+};
+
+// FIXME
+struct ResUserData {
+    ORE_ENUM(DataType, kInt, kFloat, kString, kWString, kStream)
 };
 
 void SwapEndian(ResEndian* endian, ResMetaData* res);

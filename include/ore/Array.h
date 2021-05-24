@@ -9,6 +9,7 @@ template <typename T>
 class Array {
 public:
     Array() = default;
+    Array(T* data, int size) { SetData(data, size); }
 
     T* data() const { return m_data; }
     int size() const { return m_size; }
@@ -24,8 +25,8 @@ public:
     void DestructElements() { std::destroy(begin(), end()); }
 
 private:
-    T* m_data;
-    int m_size;
+    T* m_data{};
+    int m_size{};
 };
 
 }  // namespace ore
