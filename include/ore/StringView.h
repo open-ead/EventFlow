@@ -1,6 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <ore/Types.h>
+#include <string>
 
 namespace ore {
 
@@ -33,8 +35,8 @@ public:
     TStringView(const char* data) : m_data(data), m_len(StringLength(data)) {}
 
     constexpr const T* data() const { return m_data; }
-    constexpr u32 size() const { return m_len; }
-    constexpr u32 length() const { return m_len; }
+    constexpr int size() const { return m_len; }
+    constexpr int length() const { return m_len; }
     constexpr bool empty() const { return size() == 0; }
 
     constexpr auto begin() const { return m_data; }
@@ -43,6 +45,28 @@ public:
     constexpr auto cend() const { return m_data + m_len; }
 
     const T& operator[](size_t idx) const { return m_data[idx]; }
+
+    static int Compare(TStringView lhs, TStringView rhs) {
+        const T* s1 = lhs.data();
+        const T* s2 = rhs.data();
+        int len = std::min(lhs.size(), rhs.size());
+        if (len < 1)
+            return lhs.size() - rhs.size();
+        while (len-- > 0) {
+            if (*s1 == 0 || *s1 != *s2)
+                return *s1 - *s2;
+            ++s1, ++s2;
+        }
+        return lhs.size() - rhs.size();
+    }
+
+    int Compare(TStringView rhs) const { return Compare(*this, rhs); }
+
+    friend bool operator==(TStringView lhs, TStringView rhs) {
+        return lhs.size() == rhs.size() && Compare(lhs, rhs) == 0;
+    }
+
+    friend bool operator!=(TStringView lhs, TStringView rhs) { return !operator==(rhs); }
 
 private:
     const T* m_data{};

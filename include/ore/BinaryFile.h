@@ -86,6 +86,9 @@ struct BinTString {
     auto end() { return data() + length; }
     auto end() const { return data() + length; }
 
+    // NOLINTNEXTLINE(google-explicit-constructor)
+    operator TStringView<T>() const { return {data(), length}; }
+
     BinTString* NextString() { return const_cast<BinTString*>(std::as_const(*this).NextString()); }
 
     const BinTString* NextString() const {

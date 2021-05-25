@@ -16,6 +16,8 @@ public:
     const auto& begin() const { return m_begin; }
     const auto& end() const { return m_end; }
 
+    int size() const { return end() - begin(); }
+
 private:
     T m_begin;
     T m_end;
