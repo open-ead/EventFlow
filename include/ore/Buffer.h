@@ -5,8 +5,8 @@
 namespace ore {
 
 struct Buffer {
-    void* data;
-    size_t size;
+    char* data;
+    int size;
 };
 
 }  // namespace ore

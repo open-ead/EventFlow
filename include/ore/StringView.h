@@ -32,7 +32,7 @@ public:
 
     /// @param data A null-terminated string. Must not be nullptr.
     // NOLINTNEXTLINE(google-explicit-constructor)
-    TStringView(const char* data) : m_data(data), m_len(StringLength(data)) {}
+    TStringView(const T* data) : m_data(data), m_len(StringLength(data)) {}
 
     constexpr const T* data() const { return m_data; }
     constexpr int size() const { return m_len; }

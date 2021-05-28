@@ -24,6 +24,7 @@ add_library(evfl OBJECT
   include/ore/StringPool.h
   include/ore/StringView.h
   include/ore/Types.h
+  src/evfl/MetaDataPack.cpp
   src/evfl/ResEventFlowFile.cpp
   src/evfl/ResTimeline.cpp
   src/evfl/ResActor.cpp
