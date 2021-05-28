@@ -6,6 +6,7 @@ add_library(evfl OBJECT
   include/evfl/ParamAccessor.h
   include/evfl/Query.h
   include/evfl/ResActor.h
+  include/evfl/ResEventFlowFile.h
   include/evfl/ResFlowchart.h
   include/evfl/ResTimeline.h
   include/ore/Allocator.h
@@ -22,6 +23,7 @@ add_library(evfl OBJECT
   include/ore/StringPool.h
   include/ore/StringView.h
   include/ore/Types.h
+  src/evfl/ResEventFlowFile.cpp
   src/evfl/ResTimeline.cpp
   src/evfl/ResActor.cpp
   src/evfl/ResFlowchart.cpp

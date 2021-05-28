@@ -119,5 +119,6 @@ void SwapEndian(ore::ResEndian* endian, ResCase* case_);
 void SwapEndian(ore::ResEndian* endian, ResEvent* event);
 void SwapEndian(ore::ResEndian* endian, ResEntryPoint* entry);
 void SwapEndian(ore::ResEndian* endian, ResVariableDef* def);
+void SwapEndian(ore::ResEndian* endian, ResFlowchart* flowchart);
 
 }  // namespace evfl
