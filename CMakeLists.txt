@@ -1,6 +1,7 @@
 project(EventFlow CXX ASM)
 
 add_library(evfl OBJECT
+  include/evfl/EvflAllocator.h
   include/evfl/FlowchartContext.h
   include/evfl/MetaDataPack.h
   include/evfl/ParamAccessor.h
