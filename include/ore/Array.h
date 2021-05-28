@@ -50,19 +50,19 @@ private:
 
 // This is like a std::vector.
 template <typename T>
-class Vector {
+class DynArrayList {
 public:
-    Vector() = default;
-    explicit Vector(Allocator* allocator) : m_allocator(allocator) {}
+    DynArrayList() = default;
+    explicit DynArrayList(Allocator* allocator) : m_allocator(allocator) {}
 
-    ~Vector() {
+    ~DynArrayList() {
         clear();
         m_allocator = nullptr;
         m_size = 0;
     }
 
-    Vector(const Vector&) = delete;
-    auto operator=(const Vector&) = delete;
+    DynArrayList(const DynArrayList&) = delete;
+    auto operator=(const DynArrayList&) = delete;
 
     void Init(Allocator* allocator) {
         clear();

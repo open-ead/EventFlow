@@ -76,8 +76,8 @@ public:
 private:
     friend class ActBinder;
 
-    ore::Vector<Action> m_actions{};
-    ore::Vector<Query> m_queries{};
+    ore::DynArrayList<Action> m_actions{};
+    ore::DynArrayList<Query> m_queries{};
     void* m_user_data{};
     const ResActor* m_actor{};
     bool m_initialized{};
