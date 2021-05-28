@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #endif
 
+#include <cstring>
 #include <ore/Types.h>
 
 namespace ore {
@@ -50,6 +51,15 @@ namespace ore {
 
 [[nodiscard]] inline s64 SwapEndian(s64 x) {
     return SwapEndian(u64(x));
+}
+
+[[nodiscard]] inline f32 SwapEndian(f32 x) {
+    static_assert(sizeof(u32) == sizeof(f32));
+    u32 i;
+    std::memcpy(&i, &x, sizeof(i));
+    i = SwapEndian(i);
+    std::memcpy(&x, &i, sizeof(i));
+    return x;
 }
 
 template <typename T>
