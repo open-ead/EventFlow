@@ -49,6 +49,9 @@ private:
             ore::Enum<NAME>::Info().members = ore::IterRange<ore::StringView*>(names);             \
         }                                                                                          \
                                                                                                    \
+        static int Size() { return cCount; }                                                       \
+        static Type Invalid() { return Type(Size()); }                                             \
+                                                                                                   \
     private:                                                                                       \
         static constexpr const char* cTextAll = #__VA_ARGS__;                                      \
         static constexpr size_t cTextAllLen = sizeof(#__VA_ARGS__);                                \

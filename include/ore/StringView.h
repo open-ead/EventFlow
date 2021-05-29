@@ -66,7 +66,7 @@ public:
         return lhs.size() == rhs.size() && Compare(lhs, rhs) == 0;
     }
 
-    friend bool operator!=(TStringView lhs, TStringView rhs) { return !operator==(rhs); }
+    friend bool operator!=(TStringView lhs, TStringView rhs) { return !operator==(lhs, rhs); }
 
 private:
     const T* m_data{};

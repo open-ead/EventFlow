@@ -1,6 +1,6 @@
 #pragma once
 
-#include <evfl/ParamAccessor.h>
+#include <evfl/Param.h>
 #include <ore/EnumUtil.h>
 
 namespace evfl {

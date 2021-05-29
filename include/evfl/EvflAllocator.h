@@ -13,6 +13,7 @@ struct AllocateArg {
 
 class EvflAllocator : public ore::Allocator {
 public:
+    EvflAllocator() = default;
     explicit EvflAllocator(AllocateArg arg) : m_arg(arg) {}
 
     void* AllocImpl(size_t size, size_t alignment) override {
@@ -22,7 +23,7 @@ public:
     void FreeImpl(void* ptr) override { m_arg.free(ptr, m_arg.free_userdata); }
 
 private:
-    AllocateArg m_arg{};
+    AllocateArg m_arg;
 };
 
 }  // namespace evfl

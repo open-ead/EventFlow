@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
 #include <ore/Allocator.h>
 
@@ -64,10 +66,10 @@ public:
     DynArrayList(const DynArrayList&) = delete;
     auto operator=(const DynArrayList&) = delete;
 
-    void Init(Allocator* allocator) {
+    void Init(Allocator* allocator, int initial_capacity = 1) {
         clear();
         m_allocator = allocator;
-        Reallocate(1);
+        Reallocate(initial_capacity);
     }
 
     T* begin() { return m_data; }
@@ -116,6 +118,17 @@ public:
         m_capacity = 0;
         if (data)
             m_allocator->FreeImpl(data);
+    }
+
+    template <typename InputIterator>
+    void OverwriteWith(InputIterator src_begin, InputIterator src_end) {
+        const int src_size = std::distance(src_begin, src_end);
+        if (src_size > m_capacity) {
+            m_size = 0;
+            Reallocate(2 * src_size);
+        }
+        m_size = src_size;
+        std::uninitialized_copy(src_begin, src_end, begin());
     }
 
 private:
