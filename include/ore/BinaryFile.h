@@ -86,6 +86,8 @@ struct BinTString {
     auto end() { return data() + length; }
     auto end() const { return data() + length; }
 
+    bool empty() const { return length == 0; }
+
     // NOLINTNEXTLINE(google-explicit-constructor)
     operator TStringView<T>() const { return {data(), length}; }
 

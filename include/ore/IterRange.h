@@ -13,6 +13,8 @@ public:
     // NOLINTNEXTLINE(google-explicit-constructor)
     constexpr IterRange(Other& x) : IterRange(std::begin(x), std::end(x)) {}
 
+    constexpr IterRange(const T& begin, int size) : m_begin(begin), m_end(begin + size) {}
+
     const auto& begin() const { return m_begin; }
     const auto& end() const { return m_end; }
 

@@ -31,6 +31,13 @@ constexpr int CountTrailingZeros(u64 x) {
     return PopCount((x & -x) - 1);
 }
 
+namespace detail {
+template <typename T>
+constexpr T AlignUpToPowerOf2(T val, int base) {
+    return val + base - 1 & static_cast<unsigned int>(-base);
+}
+}  // namespace detail
+
 class BitArray {
 public:
     using Word = size_t;
@@ -85,12 +92,20 @@ public:
     };
 
     constexpr BitArray() = default;
-    constexpr BitArray(Word* words, int num_bits) { SetData(words, num_bits); }
+    constexpr BitArray(void* buffer, int num_bits) { SetData(buffer, num_bits); }
 
-    void SetData(Word* words, int num_bits) {
-        m_words = words;
+    void SetData(void* buffer, int num_bits) {
+        m_words = reinterpret_cast<Word*>(buffer);
         m_num_bits = num_bits;
     }
+
+    Word* GetWordStorage() const { return m_words; }
+
+    bool Test(int bit) const {
+        return (GetWord(bit) & (Word(1) << (Word(bit) % NumBitsPerWord))) != 0;
+    }
+    void Set(int bit) { GetWord(bit) |= Word(1) << (Word(bit) % NumBitsPerWord); }
+    void Clear(int bit) { GetWord(bit) &= ~(Word(1) << (Word(bit) % NumBitsPerWord)); }
 
     void SetAllOn();
     void SetAllOff();
@@ -99,7 +114,12 @@ public:
     TestClearIter BeginTestClear();
     TestClearIter EndTestClear();
 
+    static int GetRequiredBufferSize(int num_bits) {
+        return sizeof(Word) * (detail::AlignUpToPowerOf2(num_bits, NumBitsPerWord) >> ShiftAmount);
+    }
+
 private:
+    Word& GetWord(int bit) const { return m_words[bit >> ShiftAmount]; }
     int GetNumWords() const { return int((m_num_bits + NumBitsPerWord - 1) >> ShiftAmount); }
 
     void Fill(int num, Word value) {

@@ -10,6 +10,11 @@ struct ResDic;
 struct ResEndian;
 
 struct ResMetaData {
+    struct ActorIdentifier {
+        BinTPtr<BinString> name;
+        BinTPtr<BinString> sub_name;
+    };
+
     union Value {
         BinTPtr<ResMetaData> container;
         // Also used for booleans. Anything that is != 0 is treated as true.
@@ -17,6 +22,7 @@ struct ResMetaData {
         float f;
         BinTPtr<BinString> str;
         BinTPtr<BinWString> wstr;
+        ActorIdentifier actor;
     };
 
     ORE_ENUM(DataType, kArgument, kContainer, kInt, kBool, kFloat, kString, kWString, kIntArray, kBoolArray, kFloatArray, kStringArray, kWStringArray, kActorIdentifier)

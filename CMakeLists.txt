@@ -2,7 +2,7 @@ project(EventFlow CXX ASM)
 
 add_library(evfl OBJECT
   include/evfl/EvflAllocator.h
-  include/evfl/FlowchartContext.h
+  include/evfl/Flowchart.h
   include/evfl/MetaDataPack.h
   include/evfl/Param.h
   include/evfl/Query.h
@@ -26,6 +26,7 @@ add_library(evfl OBJECT
   include/ore/Types.h
   src/evfl/MetaDataPack.cpp
   src/evfl/Param.cpp
+  src/evfl/Flowchart.cpp
   src/evfl/ResEventFlowFile.cpp
   src/evfl/ResTimeline.cpp
   src/evfl/ResActor.cpp

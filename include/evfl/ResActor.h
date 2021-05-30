@@ -70,8 +70,11 @@ public:
     auto ActionsEnd() const { return m_actions.end(); }
     auto QueriesEnd() const { return m_queries.end(); }
 
+    auto GetActor() const { return m_actor; }
+
     bool IsInitialized() const { return m_initialized; }
-    bool IsIsUsed() const { return m_is_used; }
+    bool IsUsed() const { return m_is_used; }
+    void SetIsUsed(bool used) { m_is_used = used; }
 
 private:
     friend class ActBinder;
@@ -95,11 +98,16 @@ public:
     u32 GetEventUsedActorCount() const { return m_event_used_actor_count; }
     const ore::Array<ActorBinding>& GetUsedResActors() const;
 
+    ore::Array<ActorBinding>& GetBindings() { return m_bindings; }
+    void IncrementNumActors() { ++m_event_used_actor_count; }
+    void Set1C() { _1c = true; }
+
 private:
     u32 m_event_used_actor_count;
     ore::Allocator* m_allocator;
     ore::Array<ActorBinding> m_bindings;
-    u32 _1c;
+    bool _1c;
+    u8 _1d[3];
     u8 _20[8];
 };
 

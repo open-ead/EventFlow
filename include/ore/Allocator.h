@@ -11,6 +11,10 @@ public:
     Allocator() = default;
     virtual ~Allocator() = default;
 
+    void* New(size_t size, size_t alignment = alignof(std::max_align_t)) {
+        return AllocImpl(size, alignment);
+    }
+
     template <typename T>
     T* New(size_t alignment = alignof(std::max_align_t)) {
         auto* buffer = AllocImpl(sizeof(T), alignment);

@@ -54,8 +54,12 @@ private:
 template <typename T>
 class ArrayListBase {
 public:
-    ArrayListBase() = default;
-    ArrayListBase(T* storage, int capacity) : m_data(storage), m_capacity(capacity) {}
+    ArrayListBase() : m_data(), m_size(), m_capacity() {}
+    ArrayListBase(T* data, int capacity) {
+        m_size = 0;
+        m_data = data;
+        m_capacity = capacity;
+    }
     ~ArrayListBase() { clear(); }
 
     ArrayListBase(const ArrayListBase&) = delete;
@@ -100,16 +104,15 @@ public:
         m_size = 0;
     }
 
-protected:
-    T* m_data{};
-    int m_size{};
-    int m_capacity{};
+    T* m_data;
+    int m_size;
+    int m_capacity;
 };
 
 template <typename T, int N>
 class FixedArrayList : public ArrayListBase<T> {
 public:
-    FixedArrayList() : ArrayListBase<T>(m_storage, N) {}
+    FixedArrayList() : ArrayListBase<T>(reinterpret_cast<T*>(m_storage), N) {}
 
 private:
     std::aligned_storage_t<sizeof(T), alignof(T)> m_storage[N];
