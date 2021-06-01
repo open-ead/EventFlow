@@ -50,27 +50,14 @@ private:
     int m_size{};
 };
 
-// This is like a std::vector.
 template <typename T>
-class DynArrayList {
+class ArrayListBase {
 public:
-    DynArrayList() = default;
-    explicit DynArrayList(Allocator* allocator) : m_allocator(allocator) {}
+    ArrayListBase() = default;
+    ~ArrayListBase() { clear(); }
 
-    ~DynArrayList() {
-        clear();
-        m_allocator = nullptr;
-        m_size = 0;
-    }
-
-    DynArrayList(const DynArrayList&) = delete;
-    auto operator=(const DynArrayList&) = delete;
-
-    void Init(Allocator* allocator, int initial_capacity = 1) {
-        clear();
-        m_allocator = allocator;
-        Reallocate(initial_capacity);
-    }
+    ArrayListBase(const ArrayListBase&) = delete;
+    auto operator=(const ArrayListBase&) = delete;
 
     T* begin() { return m_data; }
     const T* begin() const { return m_data; }
@@ -95,15 +82,11 @@ public:
 
     template <typename... Args>
     T& emplace_back(Args&&... args) {
-        GrowIfNeeded();
         auto* item = new (&m_data[m_size++]) T(std::forward<Args>(args)...);
         return *item;
     }
 
-    void push_back(const T& item) {
-        GrowIfNeeded();
-        new (&m_data[m_size++]) T(item);
-    }
+    void push_back(const T& item) { new (&m_data[m_size++]) T(item); }
 
     void pop_back() {
         std::destroy_at(&back());
@@ -112,10 +95,54 @@ public:
 
     void clear() {
         std::destroy(begin(), end());
-        auto* data = m_data;
-        m_data = nullptr;
         m_size = 0;
-        m_capacity = 0;
+    }
+
+protected:
+    T* m_data{};
+    int m_size{};
+    int m_capacity{};
+};
+
+// This is like a std::vector.
+template <typename T>
+class DynArrayList : public ArrayListBase<T> {
+public:
+    DynArrayList() = default;
+    explicit DynArrayList(Allocator* allocator) : m_allocator(allocator) {}
+
+    ~DynArrayList() {
+        clear();
+        m_allocator = nullptr;
+        this->m_size = 0;
+    }
+
+    DynArrayList(const DynArrayList&) = delete;
+    auto operator=(const DynArrayList&) = delete;
+
+    void Init(Allocator* allocator, int initial_capacity = 1) {
+        clear();
+        m_allocator = allocator;
+        Reallocate(initial_capacity);
+    }
+
+    template <typename... Args>
+    T& emplace_back(Args&&... args) {
+        GrowIfNeeded();
+        return ArrayListBase<T>::emplace_back(std::forward<Args>(args)...);
+    }
+
+    void push_back(const T& item) {
+        GrowIfNeeded();
+        return ArrayListBase<T>::push_back(item);
+    }
+
+    void clear() {
+        std::destroy(this->begin(), this->end());
+        auto* data = this->m_data;
+        this->m_data = nullptr;
+        this->m_size = 0;
+        this->m_capacity = 0;
         if (data)
             m_allocator->FreeImpl(data);
     }
@@ -123,39 +150,36 @@ public:
     template <typename InputIterator>
     void OverwriteWith(InputIterator src_begin, InputIterator src_end) {
         const int src_size = std::distance(src_begin, src_end);
-        if (src_size > m_capacity) {
-            m_size = 0;
+        if (src_size > this->m_capacity) {
+            this->m_size = 0;
             Reallocate(2 * src_size);
         }
-        m_size = src_size;
-        std::uninitialized_copy(src_begin, src_end, begin());
+        this->m_size = src_size;
+        std::uninitialized_copy(src_begin, src_end, this->begin());
     }
 
 private:
     void GrowIfNeeded() {
-        if (m_size < m_capacity)
+        if (this->m_size < this->m_capacity)
             return;
-        Reallocate(2 * m_size + 2);
+        Reallocate(2 * this->m_size + 2);
     }
 
     void Reallocate(int new_capacity) {
         const int num_bytes = sizeof(T) * new_capacity;
         auto* new_buffer =
             static_cast<T*>(m_allocator->AllocImpl(num_bytes, alignof(std::max_align_t)));
-        auto* old_buffer = m_data;
-        auto* capacity = &m_capacity;
+        auto* old_buffer = this->m_data;
+        auto* capacity = &this->m_capacity;
 
-        std::uninitialized_move(begin(), end(), new_buffer);
-        m_data = new_buffer;
+        std::uninitialized_move(this->begin(), this->end(), new_buffer);
+        this->m_data = new_buffer;
         *capacity = new_capacity;
 
         if (old_buffer)
             m_allocator->FreeImpl(old_buffer);
     }
 
-    T* m_data{};
-    int m_size{};
-    int m_capacity{};
     Allocator* m_allocator{};
 };
 
