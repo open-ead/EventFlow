@@ -4,6 +4,7 @@
 #include <iterator>
 #include <memory>
 #include <ore/Allocator.h>
+#include <type_traits>
 
 namespace ore {
 
@@ -54,6 +55,7 @@ template <typename T>
 class ArrayListBase {
 public:
     ArrayListBase() = default;
+    ArrayListBase(T* storage, int capacity) : m_data(storage), m_capacity(capacity) {}
     ~ArrayListBase() { clear(); }
 
     ArrayListBase(const ArrayListBase&) = delete;
@@ -102,6 +104,15 @@ protected:
     T* m_data{};
     int m_size{};
     int m_capacity{};
+};
+
+template <typename T, int N>
+class FixedArrayList : public ArrayListBase<T> {
+public:
+    FixedArrayList() : ArrayListBase<T>(m_storage, N) {}
+
+private:
+    std::aligned_storage_t<sizeof(T), alignof(T)> m_storage[N];
 };
 
 // This is like a std::vector.
