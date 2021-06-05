@@ -41,6 +41,16 @@ public:
 
     void DestructElements() { std::destroy(begin(), end()); }
 
+    void clear(Allocator* allocator) {
+        if (!m_data)
+            return;
+        auto* data = m_data;
+        DestructElements();
+        m_data = nullptr;
+        m_size = 0;
+        allocator->Free(data);
+    }
+
 private:
     void DefaultConstructElements() {
         for (auto it = begin(), e = end(); it != e;)
@@ -49,6 +59,12 @@ private:
 
     T* m_data{};
     int m_size{};
+};
+
+template <typename T>
+class SelfDestructingArray : public Array<T> {
+public:
+    ~SelfDestructingArray() { this->DestructElements(); }
 };
 
 template <typename T>
@@ -131,6 +147,11 @@ public:
         this->m_size = 0;
     }
 
+    void Reset() {
+        clear();
+        m_allocator = nullptr;
+    }
+
     DynArrayList(const DynArrayList&) = delete;
     auto operator=(const DynArrayList&) = delete;
 
@@ -170,6 +191,27 @@ public:
         }
         this->m_size = src_size;
         std::uninitialized_copy(src_begin, src_end, this->begin());
+    }
+
+    /// Resize the array so that it contains `new_size` elements.
+    ///
+    /// - If the new size is greater than the current size, new elements are added and
+    ///   default initialized. Iterators may be invalidated.
+    /// - If the new size is less than the current size, excess elements are destroyed.
+    ///
+    /// @param new_size The new size of the array.
+    void Resize(int new_size) {
+        if (this->m_capacity < new_size)
+            Reallocate(new_size);
+
+        if (this->m_size < new_size) {
+            std::uninitialized_default_construct(this->m_data + this->m_size,
+                                                 this->m_data + new_size);
+        } else {
+            std::destroy(this->m_data + new_size, this->m_data + this->m_size);
+        }
+
+        this->m_size = new_size;
     }
 
 private:

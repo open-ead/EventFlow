@@ -1,5 +1,7 @@
 project(EventFlow CXX ASM)
 
+option(EVFL_VER_LABO "Build Labo's version of this library" OFF)
+
 add_library(evfl OBJECT
   include/evfl/EvflAllocator.h
   include/evfl/Flowchart.h
@@ -16,6 +18,7 @@ add_library(evfl OBJECT
   include/ore/BitUtils.h
   include/ore/Buffer.h
   include/ore/EnumUtil.h
+  include/ore/IntrusiveList.h
   include/ore/IterRange.h
   include/ore/RelocationTable.h
   include/ore/ResDic.h
@@ -44,3 +47,7 @@ target_compile_options(evfl PRIVATE -fno-exceptions)
 target_compile_options(evfl PRIVATE -fno-strict-aliasing)
 target_compile_options(evfl PRIVATE -Wno-invalid-offsetof)
 target_include_directories(evfl PUBLIC include/)
+
+if(EVFL_VER_LABO)
+  target_compile_definitions(evfl PUBLIC EVFL_VER_LABO=1)
+endif()

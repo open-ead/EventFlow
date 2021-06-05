@@ -61,8 +61,8 @@ bool ActBinder::Builder::Build(evfl::ActBinder* binder, ore::Allocator* allocato
     return true;
 }
 
-const ore::Array<ActorBinding>& ActBinder::GetUsedResActors() const {
-    return m_bindings;
+const ore::Array<ActorBinding>* ActBinder::GetUsedResActors() const {
+    return &m_bindings;
 }
 
 void SwapEndian(ore::ResEndian* endian, ResActor* actor) {

@@ -22,6 +22,8 @@ public:
 
     void FreeImpl(void* ptr) override { m_arg.free(ptr, m_arg.free_userdata); }
 
+    AllocateArg GetArg() const { return m_arg; }
+
 private:
     AllocateArg m_arg;
 };

@@ -26,8 +26,17 @@ public:
     template <typename T>
     void Delete(T* ptr) {
         std::destroy_at(ptr);
-        FreeImpl(ptr);
+        Free(ptr);
     }
+
+    template <typename T>
+    void DeleteAndNull(T*& ptr) {
+        std::destroy_at(ptr);
+        Free(ptr);
+        ptr = nullptr;
+    }
+
+    void Free(void* ptr) { FreeImpl(ptr); }
 
     virtual void* AllocImpl(size_t size, size_t alignment) = 0;
     virtual void FreeImpl(void* ptr) = 0;

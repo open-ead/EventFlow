@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cstddef>
 #include <ore/Array.h>
 #include <ore/BinaryFile.h>
+#include <ore/IntrusiveList.h>
 #include <ore/IterRange.h>
 
 namespace ore {
@@ -12,7 +14,9 @@ struct ResMetaData;
 namespace evfl {
 
 struct ActionArg;
-struct ActionDoneHandler;
+class ActionDoneHandler;
+class FlowchartContext;
+class FlowchartObj;
 struct QueryArg;
 
 struct ResAction {
@@ -76,6 +80,19 @@ public:
     bool IsUsed() const { return m_is_used; }
     void SetIsUsed(bool used) { m_is_used = used; }
 
+    void UnbindAll() {
+        m_user_data = nullptr;
+        m_initialized = false;
+        for (auto it = m_actions.begin(); it != m_actions.end(); ++it) {
+            it->handler = nullptr;
+            it->user_data = nullptr;
+        }
+        for (auto it = m_queries.begin(); it != m_queries.end(); ++it) {
+            it->handler = nullptr;
+            it->user_data = nullptr;
+        }
+    }
+
 private:
     friend class ActBinder;
 
@@ -95,20 +112,52 @@ public:
                    ore::IterRange<const ResActor*> actors);
     };
 
+    ActBinder() = default;
+    ActBinder(const ActBinder&) = delete;
+    auto operator=(const ActBinder&) = delete;
+
+    ~ActBinder() {
+        m_event_used_actor_count = 0;
+        m_bindings.clear(m_allocator);
+        m_allocator = nullptr;
+    }
+
     u32 GetEventUsedActorCount() const { return m_event_used_actor_count; }
-    const ore::Array<ActorBinding>& GetUsedResActors() const;
+    const ore::Array<ActorBinding>* GetUsedResActors() const;
 
     ore::Array<ActorBinding>& GetBindings() { return m_bindings; }
     void IncrementNumActors() { ++m_event_used_actor_count; }
-    void Set1C() { _1c = true; }
+    void SetIsUsed() { m_is_used = true; }
+    bool IsUsed() const { return m_is_used; }
+
+    void UnbindAll() {
+        for (auto it = m_bindings.begin(); it != m_bindings.end(); ++it)
+            it->UnbindAll();
+    }
 
 private:
     u32 m_event_used_actor_count;
     ore::Allocator* m_allocator;
-    ore::Array<ActorBinding> m_bindings;
-    bool _1c;
-    u8 _1d[3];
-    u8 _20[8];
+    ore::SelfDestructingArray<ActorBinding> m_bindings;
+    bool m_is_used;
+};
+
+class ActionDoneHandler {
+public:
+    ActionDoneHandler() = default;
+
+    static constexpr size_t GetListNodeOffset() { return offsetof(ActionDoneHandler, m_list_node); }
+
+private:
+    friend class FlowchartContext;
+
+    ore::IntrusiveListNode m_list_node;
+    FlowchartContext* m_context;
+    int _18;
+    int m_node_counter;
+    FlowchartObj* m_obj;
+    bool m_handled;
+    bool m_is_flowchart;
 };
 
 void SwapEndian(ore::ResEndian* endian, ResActor* actor);
