@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ore/Allocator.h>
 #include <ore/Types.h>
 
 namespace ore {
@@ -93,13 +94,21 @@ public:
 
     constexpr BitArray() = default;
     constexpr BitArray(void* buffer, int num_bits) { SetData(buffer, num_bits); }
+    constexpr BitArray(ore::Allocator* allocator, int num_bits) {
+        AllocateBuffer(allocator, num_bits);
+    }
 
     void SetData(void* buffer, int num_bits) {
         m_words = reinterpret_cast<Word*>(buffer);
         m_num_bits = num_bits;
     }
 
-    Word* GetWordStorage() const { return m_words; }
+    void AllocateBuffer(ore::Allocator* allocator, int num_bits) {
+        SetData(allocator->New(GetRequiredBufferSize(num_bits)), num_bits);
+        SetAllOff();
+    }
+
+    void FreeBuffer(ore::Allocator* allocator) { allocator->Delete(m_words); }
 
     bool Test(int bit) const {
         return (GetWord(bit) & (Word(1) << (Word(bit) % NumBitsPerWord))) != 0;

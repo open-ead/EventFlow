@@ -244,9 +244,7 @@ bool FlowchartObj::Builder::Build(FlowchartObj* obj, ore::Allocator* allocator,
                                {m_flowchart->actors.Get(), m_flowchart->num_actors});
 
     const int num_events = m_flowchart->num_events;
-    ore::BitArray visited_events{allocator->New(ore::BitArray::GetRequiredBufferSize(num_events)),
-                                 num_events};
-    visited_events.SetAllOff();
+    ore::BitArray visited_events{allocator, num_events};
 
     auto* entry_points = obj->m_flowchart->entry_points.Get();
     auto entry_point_it = m_entry_points_mask->BeginTest();
@@ -258,7 +256,7 @@ bool FlowchartObj::Builder::Build(FlowchartObj* obj, ore::Allocator* allocator,
         ++entry_point_it;
     }
 
-    allocator->Delete(visited_events.GetWordStorage());
+    visited_events.FreeBuffer(allocator);
     return true;
 }
 
