@@ -54,6 +54,12 @@ public:
     FlowchartContextNode() { Reset(); }
 
     bool IsInvalidOrFree() const { return m_state == State::kInvalid || m_state == State::kFree; }
+    FlowchartObj* GetObj() const { return m_obj; }
+    VariablePack* GetVariablePack() const { return m_variable_pack; }
+    int GetNodeCounter() const { return m_node_counter; }
+    u16 GetEventIdx() const { return m_event_idx; }
+    u16 GetNextNodeIdx() const { return m_next_node_idx; }
+    State::Type GetState() const { return m_state; }
 
     void Reset() {
         m_node_counter = -1;
@@ -108,6 +114,9 @@ public:
     bool IsUsing(const ResFlowchart* flowchart) const;
     bool IsPlaying(const ResFlowchart* flowchart) const;
     const ore::Array<ActorBinding>* GetUsedResActors(ore::StringView flowchart_name) const;
+
+    const FlowchartContextNode& GetNode(int idx) const { return m_nodes[idx]; }
+    MetaDataPack* GetMetaDataPack() const { return m_metadata_pack; }
 
 private:
     void Dispose() {

@@ -2,6 +2,8 @@
 
 #include <ore/BinaryFile.h>
 #include <ore/EnumUtil.h>
+#include <ore/ResDic.h>
+#include <ore/StringView.h>
 #include <ore/Types.h>
 
 namespace ore {
@@ -26,6 +28,19 @@ struct ResMetaData {
     };
 
     ORE_ENUM(DataType, kArgument, kContainer, kInt, kBool, kFloat, kString, kWString, kIntArray, kBoolArray, kFloatArray, kStringArray, kWStringArray, kActorIdentifier)
+
+    /// @warning Only usable if type == kContainer.
+    const ResMetaData* Get(const StringView& key, DataType::Type expected_type) const {
+        const int idx = dictionary.Get()->FindIndex(key);
+        if (idx == -1)
+            return nullptr;
+
+        const auto* meta = (&value.container + idx)->Get();
+        if (meta->type != expected_type)
+            return nullptr;
+
+        return meta;
+    }
 
     SizedEnum<DataType::Type, u8> type;
     u16 num_items;

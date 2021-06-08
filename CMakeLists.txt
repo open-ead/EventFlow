@@ -5,7 +5,6 @@ option(EVFL_VER_LABO "Build Labo's version of this library" OFF)
 add_library(evfl OBJECT
   include/evfl/EvflAllocator.h
   include/evfl/Flowchart.h
-  include/evfl/MetaDataPack.h
   include/evfl/Param.h
   include/evfl/Query.h
   include/evfl/ResActor.h
@@ -27,7 +26,6 @@ add_library(evfl OBJECT
   include/ore/StringPool.h
   include/ore/StringView.h
   include/ore/Types.h
-  src/evfl/MetaDataPack.cpp
   src/evfl/Param.cpp
   src/evfl/Flowchart.cpp
   src/evfl/ResEventFlowFile.cpp
