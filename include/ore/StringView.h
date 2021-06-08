@@ -28,7 +28,7 @@ public:
     // initialize static StringView variables).
     TStringView() {}
 
-    constexpr TStringView(const char* data, size_t len) : m_data(data), m_len(len) {}
+    constexpr TStringView(const T* data, size_t len) : m_data(data), m_len(len) {}
 
     /// @param data A null-terminated string. Must not be nullptr.
     // NOLINTNEXTLINE(google-explicit-constructor)
