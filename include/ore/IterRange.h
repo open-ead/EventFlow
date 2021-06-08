@@ -21,8 +21,8 @@ public:
     int size() const { return end() - begin(); }
 
 private:
-    T m_begin;
-    T m_end;
+    T m_begin{};
+    T m_end{};
 };
 
 }  // namespace ore
