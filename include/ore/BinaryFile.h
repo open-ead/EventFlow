@@ -141,12 +141,7 @@ struct BinTPtr {
     void Relocate(void* base) { Set(ToPtr(base)); }
     void Unrelocate(void* base) { SetOffset(base, Get()); }
 
-    union {
-        // Do not use. This is only here to make debuggers and tools like Ghidra understand
-        // that a BinTPtr is fundamentally a pointer to a T.
-        [[deprecated("Do not use this.")]] T* ptr;
-        u64 offset_or_ptr;
-    };
+    u64 offset_or_ptr;
 };
 
 static_assert(sizeof(u64) >= sizeof(void*));
