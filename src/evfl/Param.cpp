@@ -57,16 +57,6 @@ VariablePack::~VariablePack() {
     Dispose();
 }
 
-template <typename T>
-static void DestroyVariableArray(ore::Allocator* allocator, T* ptr) {
-    if (*ptr == nullptr)
-        return;
-    std::destroy_at(*ptr);
-    auto* array = *ptr;
-    allocator->FreeImpl(array);
-    *ptr = nullptr;
-}
-
 void VariablePack::Dispose() {
     auto* variables = m_variables.data();
     if (!variables)
@@ -75,10 +65,12 @@ void VariablePack::Dispose() {
     for (auto& variable : m_variables) {
         switch (variable.type) {
         case ore::ResMetaData::DataType::kIntArray:
-            DestroyVariableArray(GetAllocator(), &variable.value.int_array);
+            if (variable.value.int_array)
+                GetAllocator()->DeleteAndNull(variable.value.int_array);
             break;
         case ore::ResMetaData::DataType::kFloatArray:
-            DestroyVariableArray(GetAllocator(), &variable.value.float_array);
+            if (variable.value.float_array)
+                GetAllocator()->DeleteAndNull(variable.value.float_array);
             break;
         default:
             break;
