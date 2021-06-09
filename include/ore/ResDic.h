@@ -27,7 +27,7 @@ struct ResDic {
         while (prev->compact_bit_idx < entry->compact_bit_idx) {
             const int bit_idx = entry->compact_bit_idx;
             long bit = 0;
-            if (key.length() > u32(bit_idx >> 3))
+            if (u32(key.length()) > u32(bit_idx >> 3))
                 bit = ((key[key.length() + -((bit_idx >> 3) + 1)] >> (bit_idx & 7))) & 1;
 
             prev = entry;
