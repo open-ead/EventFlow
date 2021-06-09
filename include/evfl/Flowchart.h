@@ -111,7 +111,7 @@ public:
     void FreeVariablePack(FlowchartContextNode& node);
     void CopyVariablePack(FlowchartContextNode& src, FlowchartContextNode& dst);
     bool ProcessContextNode(int idx);
-    ActorBinding* TraceBackArgumentActor(int node_idx, const ore::StringView& name);
+    ActorBinding* TrackBackArgumentActor(int node_idx, const ore::StringView& name);
     bool IsUsing(const ResFlowchart* flowchart) const;
     bool IsPlaying(const ResFlowchart* flowchart) const;
     const ore::Array<ActorBinding>* GetUsedResActors(ore::StringView flowchart_name) const;

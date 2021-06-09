@@ -380,6 +380,40 @@ void FlowchartContext::CopyVariablePack(FlowchartContextNode& src, FlowchartCont
     dst.m_owns_variable_pack = false;
 }
 
+ActorBinding* FlowchartContext::TrackBackArgumentActor(int node_idx, const ore::StringView& name) {
+    if (node_idx == -1)
+        return nullptr;
+
+    const ore::ResMetaData* metadata;
+    const MetaDataPack* metadata_pack;
+    const VariablePack* variable_pack;
+    FlowchartObj* obj;
+    const ParamAccessor accessor{this, GetNode(node_idx).GetNextNodeIdx()};
+    const auto real_name =
+        accessor.TrackBackArgument(&metadata, &metadata_pack, &variable_pack, &obj, name);
+
+    if (real_name.empty() || !metadata || !obj)
+        return nullptr;
+
+    const auto* param = metadata->Get(real_name, ore::ResMetaData::DataType::kActorIdentifier);
+    if (!param)
+        return nullptr;
+
+    const ore::StringView actor_name = *param->value.actor.name.Get();
+    const ore::StringView actor_sub_name = *param->value.actor.sub_name.Get();
+
+    auto actor = obj->GetFlowchart()->actors.Get();
+    for (int i = 0; i < int(obj->GetFlowchart()->num_actors); ++i, ++actor) {
+        if (*actor->name.Get() == actor_name && *actor->secondary_name.Get() == actor_sub_name) {
+            if (!actor->argument_name.Get()->empty())
+                return nullptr;
+            return &obj->GetActBinder().GetBindings()[i];
+        }
+    }
+
+    return nullptr;
+}
+
 bool FlowchartContext::IsUsing(const ResFlowchart* flowchart) const {
     auto* obj = FindFlowchartObj(*flowchart->name.Get());
     return obj && obj->GetActBinder().IsUsed();
