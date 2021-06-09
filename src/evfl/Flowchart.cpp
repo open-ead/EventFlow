@@ -2,6 +2,7 @@
 #include <evfl/Flowchart.h>
 #include <evfl/Param.h>
 #include <evfl/ResFlowchart.h>
+#include <iterator>
 #include <ore/Array.h>
 #include <ore/BitUtils.h>
 #include <ore/IterRange.h>
@@ -448,6 +449,150 @@ FlowchartContext::GetUsedResActors(ore::StringView flowchart_name) const {
     if (!obj)
         return nullptr;
     return obj->GetActBinder().GetUsedResActors();
+}
+
+/// Recursively checks subflow calls in the specified entry point for missing flowcharts
+/// or entry points.
+/// @param result  Optional.
+/// @param visited  Visited entry points (one BitArray per flowchart)
+/// @param flowchart_idx   Index of the flowchart to which the entry point belongs.
+/// @param entry_point_idx  Index of the entry point to be checked.
+/// @returns true on success, false on failure
+bool CheckSubFlowCalls(FlowchartContext::Builder::BuildResult* result,
+                       const ore::IterRange<const ResFlowchart* const*>& flowcharts,
+                       ore::Array<ore::BitArray>& visited, int flowchart_idx, int entry_point_idx) {
+    if (visited[flowchart_idx].Test(entry_point_idx))
+        return true;
+    visited[flowchart_idx].Set(entry_point_idx);
+
+    const auto* flowchart = *std::next(flowcharts.begin(), flowchart_idx);
+    const auto entry_point_name =
+        flowchart->entry_point_names.Get()->GetEntries()[1 + entry_point_idx].GetKey();
+    const auto* entry_point = flowchart->GetEntryPoint(entry_point_name);
+
+    for (u16 i = 0; i != entry_point->num_sub_flow_event_indices; ++i) {
+        const auto& event = flowchart->events.Get()[entry_point->sub_flow_event_indices.Get()[i]];
+        ore::StringView sub_flow_flowchart = *event.sub_flow_flowchart.Get();
+        const ore::StringView sub_flow_entry_point = *event.sub_flow_entry_point.Get();
+
+        auto sub_flowchart_idx = flowchart_idx;
+        auto* sub_flowchart_res = flowchart;
+
+        if (!sub_flow_flowchart.empty()) {
+            const auto it =
+                std::find_if(flowcharts.begin(), flowcharts.end(), [=](const ResFlowchart* f) {
+                    return sub_flow_flowchart == *f->name.Get();
+                });
+
+            if (it == flowcharts.end()) {
+                if (result) {
+                    result->result =
+                        FlowchartContext::Builder::BuildResultType::kResFlowchartNotFound;
+                    result->missing_flowchart_name = sub_flow_flowchart;
+                    result->missing_entry_point_name = {};
+                }
+                return false;
+            }
+
+            sub_flowchart_idx = std::distance(flowcharts.begin(), it);
+            sub_flowchart_res = *it;
+
+        } else {
+            sub_flow_flowchart = *flowchart->name.Get();
+        }
+
+        const int sub_entry_point_idx =
+            sub_flowchart_res->entry_point_names.Get()->FindIndex(sub_flow_entry_point);
+
+        if (sub_entry_point_idx == -1) {
+            if (result) {
+                result->result = FlowchartContext::Builder::BuildResultType::kEntryPointNotFound;
+                result->missing_flowchart_name = sub_flow_flowchart;
+                result->missing_entry_point_name = sub_flow_entry_point;
+            }
+            return false;
+        }
+
+        if (!CheckSubFlowCalls(result, flowcharts, visited, sub_flowchart_idx, sub_entry_point_idx))
+            return false;
+    }
+
+    if (result) {
+        result->result = FlowchartContext::Builder::BuildResultType::kSuccess;
+        result->missing_flowchart_name = {};
+        result->missing_entry_point_name = {};
+    }
+    return true;
+}
+
+bool FlowchartContext::Builder::SetEntryPoint(const ore::StringView& flowchart_name,
+                                              const ore::StringView& entry_point_name) {
+    return SetEntryPoint(nullptr, flowchart_name, entry_point_name);
+}
+
+bool FlowchartContext::Builder::SetEntryPoint(BuildResult* result,
+                                              const ore::StringView& flowchart_name,
+                                              const ore::StringView& entry_point_name) {
+    const auto* flowchart_it =
+        std::find_if(m_flowcharts.begin(), m_flowcharts.end(), [=](const ResFlowchart* flowchart) {
+            return flowchart_name == *flowchart->name.Get();
+        });
+
+    if (flowchart_it == m_flowcharts.end()) {
+        if (result) {
+            result->result = BuildResultType::kResFlowchartNotFound;
+            result->missing_flowchart_name = flowchart_name;
+            result->missing_entry_point_name = {};
+        }
+        return false;
+    }
+
+    const auto entry_point_idx =
+        (*flowchart_it)->entry_point_names.Get()->FindIndex(entry_point_name);
+
+    if (entry_point_idx == -1) {
+        if (result) {
+            result->result = BuildResultType::kEntryPointNotFound;
+            result->missing_flowchart_name = flowchart_name;
+            result->missing_entry_point_name = entry_point_name;
+        }
+        return false;
+    }
+
+    m_flowchart_idx = std::distance(m_flowcharts.begin(), flowchart_it);
+    m_entry_point_idx = entry_point_idx;
+    if (result) {
+        result->result = BuildResultType::kSuccess;
+        result->missing_flowchart_name = {};
+        result->missing_entry_point_name = {};
+    }
+    return true;
+}
+
+bool FlowchartContext::Builder::Build(FlowchartContext* context, AllocateArg allocate_arg) {
+    return Build(nullptr, context, allocate_arg);
+}
+
+bool FlowchartContext::Builder::Build(BuildResult* result, FlowchartContext* context,
+                                      AllocateArg allocate_arg) {
+    context->Dispose();
+
+    EvflAllocator allocator{allocate_arg};
+
+    ore::DynArrayList<const ResFlowchart*> flowcharts{&allocator};
+    flowcharts.Init(&allocator);
+    flowcharts.DeduplicateCopy(m_flowcharts);
+
+    FlowchartRange range{flowcharts};
+    ore::Buffer obj_buffer{};
+    obj_buffer.Allocate<FlowchartObj>(&allocator, flowcharts.size());
+
+    if (!BuildImpl(result, range, context, allocate_arg, obj_buffer)) {
+        obj_buffer.Free(&allocator);
+        return false;
+    }
+
+    return true;
 }
 
 bool FlowchartObj::Builder::Build(FlowchartObj* obj, ore::Allocator* allocator,

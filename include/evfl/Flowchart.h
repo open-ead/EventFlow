@@ -3,6 +3,7 @@
 #include <evfl/EvflAllocator.h>
 #include <evfl/ResActor.h>
 #include <ore/Array.h>
+#include <ore/Buffer.h>
 #include <ore/EnumUtil.h>
 #include <ore/IntrusiveList.h>
 #include <ore/IterRange.h>
@@ -88,10 +89,38 @@ private:
 
 class FlowchartContext {
 public:
-    // FIXME
     class Builder {
     public:
+        using FlowchartRange = ore::IterRange<const ResFlowchart* const*>;
         ORE_ENUM(BuildResultType, kSuccess, kInvalidOperation, kResFlowchartNotFound, kEntryPointNotFound)
+
+        struct BuildResult {
+            BuildResultType::Type result{};
+            /// Indicates which flowchart was required yet couldn't be found.
+            ore::StringView missing_flowchart_name{};
+            /// Indicates which entry point was required yet couldn't be found.
+            ore::StringView missing_entry_point_name{};
+        };
+
+        Builder() = default;
+        explicit Builder(FlowchartRange flowcharts, int flowchart_idx = 0)
+            : m_flowcharts(flowcharts), m_flowchart_idx(flowchart_idx) {}
+
+        bool SetEntryPoint(const ore::StringView& flowchart_name,
+                           const ore::StringView& entry_point_name);
+        bool SetEntryPoint(BuildResult* result, const ore::StringView& flowchart_name,
+                           const ore::StringView& entry_point_name);
+
+        bool Build(FlowchartContext* context, AllocateArg allocate_arg);
+        bool Build(BuildResult* result, FlowchartContext* context, AllocateArg allocate_arg);
+
+    private:
+        bool BuildImpl(BuildResult* result, FlowchartRange flowcharts, FlowchartContext* context,
+                       AllocateArg allocate_arg, ore::Buffer flowchart_obj_buffer);
+
+        FlowchartRange m_flowcharts{};
+        int m_flowchart_idx = 0;
+        int m_entry_point_idx = -1;
     };
 
     FlowchartContext();

@@ -2,7 +2,9 @@
 
 #include <ore/BinaryFile.h>
 #include <ore/EnumUtil.h>
+#include <ore/ResDic.h>
 #include <ore/ResMetaData.h>
+#include <ore/StringView.h>
 
 namespace ore {
 struct ResEndian;
@@ -93,6 +95,14 @@ struct ResEntryPoint {
 
 struct ResFlowchart {
     int CountEvent(ResEvent::EventType::Type type) const;
+
+    const ResEntryPoint* GetEntryPoint(const ore::StringView& entry_point_name) const {
+        const int idx = entry_point_names.Get()->FindIndex(entry_point_name);
+        if (idx == -1)
+            return nullptr;
+
+        return entry_points.Get() + idx;
+    }
 
     /// 'EVFL'
     u32 magic;

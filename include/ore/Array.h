@@ -4,6 +4,7 @@
 #include <iterator>
 #include <memory>
 #include <ore/Allocator.h>
+#include <ore/IterRange.h>
 #include <type_traits>
 
 namespace ore {
@@ -31,12 +32,16 @@ public:
     T& back() { return m_data[m_size - 1]; }
     const T& back() const { return m_data[m_size - 1]; }
 
-    void AllocateElements(int num, Allocator* allocator) {
-        auto* new_buffer = allocator->AllocImpl(num * int(sizeof(T)), alignof(std::max_align_t));
+    void ConstructElements(void* new_buffer, int num) {
         DestructElements();
         m_data = static_cast<T*>(new_buffer);
         m_size = num;
         DefaultConstructElements();
+    }
+
+    void AllocateElements(int num, Allocator* allocator) {
+        auto* new_buffer = allocator->AllocImpl(num * int(sizeof(T)), alignof(std::max_align_t));
+        ConstructElements(new_buffer, num);
     }
 
     void DestructElements() { std::destroy(begin(), end()); }
@@ -190,6 +195,16 @@ public:
         }
         this->m_size = src_size;
         std::uninitialized_copy(src_begin, src_end, this->begin());
+    }
+
+    /// Quadratic complexity; only use this for small copies.
+    template <typename Range>
+    void DeduplicateCopy(const Range& range) {
+        for (auto it = range.begin(), end = range.end(); it != end; ++it) {
+            auto value = *it;
+            if (std::find_if(range.begin(), it, [&](const auto& v) { return value == v; }) == it)
+                this->emplace_back(value);
+        }
     }
 
     /// Resize the array so that it contains `new_size` elements.

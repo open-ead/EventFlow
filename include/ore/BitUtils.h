@@ -108,6 +108,11 @@ public:
         SetAllOff();
     }
 
+    void FreeBufferIfNeeded(ore::Allocator* allocator) {
+        if (m_words)
+            allocator->Delete(m_words);
+    }
+
     void FreeBuffer(ore::Allocator* allocator) { allocator->Delete(m_words); }
 
     bool Test(int bit) const {
