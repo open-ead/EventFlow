@@ -178,8 +178,7 @@ public:
         this->m_data = nullptr;
         this->m_size = 0;
         this->m_capacity = 0;
-        if (data)
-            m_allocator->FreeImpl(data);
+        Free(data);
     }
 
     template <typename InputIterator>
@@ -226,14 +225,19 @@ private:
         auto* new_buffer =
             static_cast<T*>(m_allocator->AllocImpl(num_bytes, alignof(std::max_align_t)));
         auto* old_buffer = this->m_data;
-        auto* capacity = &this->m_capacity;
-
-        std::uninitialized_move(this->begin(), this->end(), new_buffer);
+        UninitializedCopyTo(new_buffer);
         this->m_data = new_buffer;
-        *capacity = new_capacity;
+        this->m_capacity = new_capacity;
+        Free(old_buffer);
+    }
 
-        if (old_buffer)
-            m_allocator->FreeImpl(old_buffer);
+    void UninitializedCopyTo(T* destination) const {
+        std::uninitialized_copy(this->begin(), this->end(), destination);
+    }
+
+    void Free(void* ptr) {
+        if (ptr)
+            m_allocator->Free(ptr);
     }
 
     Allocator* m_allocator{};
