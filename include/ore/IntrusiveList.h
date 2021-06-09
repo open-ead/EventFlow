@@ -4,6 +4,8 @@ namespace ore {
 
 class IntrusiveListNode {
 public:
+    constexpr explicit IntrusiveListNode() { m_prev = m_next = this; }
+
     IntrusiveListNode* Prev() const { return m_prev; }
     IntrusiveListNode* Next() const { return m_next; }
     bool IsLinked() const { return Prev() || Next(); }
@@ -29,7 +31,6 @@ private:
 template <typename T>
 class IntrusiveList {
 public:
-    constexpr explicit IntrusiveList() { m_node.m_prev = m_node.m_next = &m_node; }
     void SetOffset(int offset) { m_offset = offset; }
 
     bool Empty() const { return m_node.m_next == &m_node; }

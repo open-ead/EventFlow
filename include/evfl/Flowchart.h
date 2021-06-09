@@ -73,6 +73,7 @@ public:
     }
 
 private:
+    friend class ActionDoneHandler;
     friend class FlowchartContext;
 
     FlowchartObj* m_obj;
@@ -115,6 +116,7 @@ public:
     bool IsPlaying(const ResFlowchart* flowchart) const;
     const ore::Array<ActorBinding>* GetUsedResActors(ore::StringView flowchart_name) const;
 
+    FlowchartContextNode& GetNode(int idx) { return m_nodes[idx]; }
     const FlowchartContextNode& GetNode(int idx) const { return m_nodes[idx]; }
     MetaDataPack* GetMetaDataPack() const { return m_metadata_pack; }
 

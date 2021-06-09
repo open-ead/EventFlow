@@ -359,7 +359,7 @@ void FlowchartContext::Clear() {
         handler->m_list_node.Erase();
         handler->m_context = nullptr;
         handler->m_obj = nullptr;
-        handler->_18 = -1;
+        handler->m_node_idx = -1;
         handler->m_node_counter = -1;
         handler->m_handled = false;
         handler->m_is_flowchart = true;

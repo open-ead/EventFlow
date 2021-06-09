@@ -26,6 +26,7 @@ add_library(evfl OBJECT
   include/ore/StringPool.h
   include/ore/StringView.h
   include/ore/Types.h
+  src/evfl/Actor.cpp
   src/evfl/Param.cpp
   src/evfl/Flowchart.cpp
   src/evfl/ResEventFlowFile.cpp

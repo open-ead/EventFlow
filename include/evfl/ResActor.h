@@ -16,6 +16,7 @@ namespace evfl {
 struct ActionArg;
 class ActionDoneHandler;
 class FlowchartContext;
+class FlowchartContextNode;
 class FlowchartObj;
 struct QueryArg;
 
@@ -145,6 +146,13 @@ private:
 class ActionDoneHandler {
 public:
     ActionDoneHandler() = default;
+    ActionDoneHandler(FlowchartObj* obj, FlowchartContext* context, int node_idx);
+
+    FlowchartContextNode* GetContextNode();
+    void InvokeFromFlowchartImpl();
+    void InvokeFromTimelineImpl();
+    bool IsWaitingJoin();
+    bool CancelWaiting();
 
     static constexpr size_t GetListNodeOffset() { return offsetof(ActionDoneHandler, m_list_node); }
 
@@ -152,12 +160,12 @@ private:
     friend class FlowchartContext;
 
     ore::IntrusiveListNode m_list_node;
-    FlowchartContext* m_context;
-    int _18;
-    int m_node_counter;
-    FlowchartObj* m_obj;
-    bool m_handled;
-    bool m_is_flowchart;
+    FlowchartContext* m_context = nullptr;
+    int m_node_idx = -1;
+    int m_node_counter = -1;
+    FlowchartObj* m_obj = nullptr;
+    bool m_handled = false;
+    bool m_is_flowchart = true;
 };
 
 void SwapEndian(ore::ResEndian* endian, ResActor* actor);
