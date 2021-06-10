@@ -104,6 +104,10 @@ struct ResFlowchart {
         return entry_points.Get() + idx;
     }
 
+    ore::StringView GetEntryPointName(int idx) const {
+        return entry_point_names.Get()->GetEntries()[1 + idx].GetKey();
+    }
+
     /// 'EVFL'
     u32 magic;
     /// String pool offset (relative to this structure)

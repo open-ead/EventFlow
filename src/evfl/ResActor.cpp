@@ -47,7 +47,7 @@ bool ActBinder::Builder::Build(evfl::ActBinder* binder, ore::Allocator* allocato
                                ore::IterRange<const ResActor*> actors) {
     binder->m_event_used_actor_count = 0;
     binder->m_allocator = allocator;
-    binder->m_bindings.AllocateElements(actors.size(), allocator);
+    binder->m_bindings.ConstructElements(actors.size(), allocator);
 
     auto it = actors.begin();
     for (int i = 0; i < actors.size(); ++i) {

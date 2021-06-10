@@ -341,6 +341,77 @@ bool FlowchartContext::Builder::SetEntryPoint(BuildResult* result,
     return true;
 }
 
+bool FlowchartContext::Builder::BuildImpl(BuildResult* result, FlowchartRange flowcharts,
+                                          FlowchartContext* context, AllocateArg allocate_arg,
+                                          ore::Buffer flowchart_obj_buffer) {
+    context->m_nodes.Reset();
+    EvflAllocator allocator{allocate_arg};
+    context->m_allocator = allocator;
+
+    const int num_flowcharts = flowcharts.size();
+
+    ore::Array<ore::BitArray> visited_entry_points;
+    visited_entry_points.SetBuffer(num_flowcharts, &allocator);
+    visited_entry_points.UninitializedDefaultConstructElements();
+
+    const auto clean_up_visited_entry_points = [&] {
+        if (auto* data = visited_entry_points.data()) {
+            for (auto it = data; it != data + visited_entry_points.size(); ++it)
+                it->FreeBufferIfNeeded(&allocator);
+
+            visited_entry_points.DestructElements();
+            allocator.Free(data);
+        }
+    };
+
+    for (int i = 0; i < num_flowcharts; ++i) {
+        visited_entry_points[i].AllocateBuffer(&allocator,
+                                               (flowcharts.begin()[i])->num_entry_points);
+    }
+
+    if (!CheckSubFlowCalls(result, flowcharts, visited_entry_points, m_flowchart_idx,
+                           m_entry_point_idx)) {
+        clean_up_visited_entry_points();
+        return false;
+    }
+
+    context->m_objs.ConstructElements(flowchart_obj_buffer);
+
+    for (int i = 0; i < num_flowcharts; ++i) {
+        auto* obj = &context->m_objs[i];
+        FlowchartObj::Builder obj_builder{flowcharts.begin()[i], &visited_entry_points[i]};
+
+        if (!obj_builder.Build(obj, &context->m_allocator, flowcharts)) {
+            clean_up_visited_entry_points();
+            context->m_objs.ClearWithoutFreeing();
+
+            if (result) {
+                const auto* flowchart = flowcharts.begin()[m_flowchart_idx];
+                const ore::StringView name = *flowchart->name.Get();
+                const ore::StringView ep_name = flowchart->GetEntryPointName(m_entry_point_idx);
+                result->result = BuildResultType::kInvalidOperation;
+                result->missing_flowchart_name = name;
+                result->missing_entry_point_name = ep_name;
+            }
+            return false;
+        }
+    }
+
+    context->m_obj_idx = m_flowchart_idx;
+    context->m_active_entry_point_idx = m_entry_point_idx;
+    context->m_nodes.Init(&context->m_allocator, 16);
+    context->m_nodes.Resize(16);
+    context->Clear();
+    clean_up_visited_entry_points();
+
+    if (result) {
+        result->result = BuildResultType::kSuccess;
+        result->missing_flowchart_name = {};
+        result->missing_entry_point_name = {};
+    }
+    return true;
+}
+
 bool FlowchartContext::Builder::Build(FlowchartContext* context, AllocateArg allocate_arg) {
     return Build(nullptr, context, allocate_arg);
 }

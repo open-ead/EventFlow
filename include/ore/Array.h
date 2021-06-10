@@ -4,6 +4,7 @@
 #include <iterator>
 #include <memory>
 #include <ore/Allocator.h>
+#include <ore/Buffer.h>
 #include <ore/IterRange.h>
 #include <type_traits>
 
@@ -32,36 +33,60 @@ public:
     T& back() { return m_data[m_size - 1]; }
     const T& back() const { return m_data[m_size - 1]; }
 
-    void ConstructElements(void* new_buffer, int num) {
+    void SetBuffer(void* new_buffer, int num) {
         DestructElements();
         m_data = static_cast<T*>(new_buffer);
         m_size = num;
+    }
+
+    void SetBuffer(int num, Allocator* allocator) {
+        auto* new_buffer = allocator->AllocImpl(num * int(sizeof(T)), alignof(std::max_align_t));
+        SetBuffer(new_buffer, num);
+    }
+
+    void ConstructElements(int num, Allocator* allocator) {
+        SetBuffer(num, allocator);
         DefaultConstructElements();
     }
 
-    void AllocateElements(int num, Allocator* allocator) {
-        auto* new_buffer = allocator->AllocImpl(num * int(sizeof(T)), alignof(std::max_align_t));
-        ConstructElements(new_buffer, num);
+    void ConstructElements(void* new_buffer, int num) {
+        SetBuffer(new_buffer, num);
+        DefaultConstructElements();
+    }
+
+    void ConstructElements(Buffer buffer) {
+        DestructElements();
+        m_data = reinterpret_cast<T*>(buffer.data);
+        m_size = buffer.size / int(sizeof(T));
+        DefaultConstructElements();
     }
 
     void DestructElements() { std::destroy(begin(), end()); }
 
-    void clear(Allocator* allocator) {
-        if (!m_data)
-            return;
-        auto* data = m_data;
+    void ClearWithoutFreeing() {
         DestructElements();
         m_data = nullptr;
         m_size = 0;
+    }
+
+    void Clear(Allocator* allocator) {
+        if (!m_data)
+            return;
+        auto* data = m_data;
+        ClearWithoutFreeing();
         allocator->Free(data);
     }
 
-private:
     void DefaultConstructElements() {
         for (auto it = begin(), e = end(); it != e;)
             new (it++) T;
     }
 
+    void UninitializedDefaultConstructElements() {
+        std::uninitialized_default_construct(begin(), end());
+    }
+
+private:
     T* m_data{};
     int m_size{};
 };

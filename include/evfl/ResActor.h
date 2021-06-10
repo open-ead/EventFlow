@@ -117,9 +117,15 @@ public:
     ActBinder(const ActBinder&) = delete;
     auto operator=(const ActBinder&) = delete;
 
+#ifdef MATCHING_HACK_NX_CLANG
+    [[gnu::always_inline]]
+#endif
     ~ActBinder() {
         m_event_used_actor_count = 0;
-        m_bindings.clear(m_allocator);
+        if (auto* data = m_bindings.data()) {
+            m_bindings.ClearWithoutFreeing();
+            m_allocator->Free(data);
+        }
         m_allocator = nullptr;
     }
 
@@ -137,10 +143,10 @@ public:
     }
 
 private:
-    u32 m_event_used_actor_count;
-    ore::Allocator* m_allocator;
-    ore::SelfDestructingArray<ActorBinding> m_bindings;
-    bool m_is_used;
+    u32 m_event_used_actor_count{};
+    ore::Allocator* m_allocator{};
+    ore::SelfDestructingArray<ActorBinding> m_bindings{};
+    bool m_is_used{};
 };
 
 class ActionDoneHandler {

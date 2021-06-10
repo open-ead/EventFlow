@@ -39,13 +39,18 @@ public:
         ActBinder::Builder m_act_binder_builder{};
     };
 
+#ifdef MATCHING_HACK_NX_CLANG
+    [[gnu::always_inline]]
+#endif
+    ~FlowchartObj() = default;
+
     const ResFlowchart* GetFlowchart() const { return m_flowchart; }
     const ActBinder& GetActBinder() const { return m_act_binder; }
     ActBinder& GetActBinder() { return m_act_binder; }
 
 private:
     const ResFlowchart* m_flowchart{};
-    ActBinder m_act_binder{};
+    ActBinder m_act_binder;
 };
 
 class FlowchartContextNode {
@@ -154,7 +159,7 @@ private:
         m_obj_idx = -1;
         m_active_entry_point_idx = -1;
         m_metadata_pack = nullptr;
-        m_objs.clear(&m_allocator);
+        m_objs.Clear(&m_allocator);
         for (auto& node : m_nodes)
             FreeVariablePack(node);
         m_nodes.Reset();

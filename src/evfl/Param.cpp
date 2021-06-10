@@ -608,7 +608,7 @@ void VariablePack::Init(AllocateArg arg, const ResEntryPoint* entry_point) {
     Dispose();
     m_names = entry_point->variable_defs_names.Get();
     m_allocator = evfl::EvflAllocator{arg};
-    m_variables.AllocateElements(m_names->num_entries, GetAllocator());
+    m_variables.ConstructElements(m_names->num_entries, GetAllocator());
 
     const ResVariableDef* def = entry_point->variable_defs.Get();
     for (auto& variable : m_variables) {
