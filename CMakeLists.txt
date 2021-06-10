@@ -29,6 +29,7 @@ add_library(evfl OBJECT
   src/evfl/Actor.cpp
   src/evfl/Param.cpp
   src/evfl/Flowchart.cpp
+  src/evfl/FlowchartObj.cpp
   src/evfl/ResEventFlowFile.cpp
   src/evfl/ResTimeline.cpp
   src/evfl/ResActor.cpp
