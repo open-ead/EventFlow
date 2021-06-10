@@ -240,9 +240,10 @@ private:
         auto* new_buffer =
             static_cast<T*>(m_allocator->AllocImpl(num_bytes, alignof(std::max_align_t)));
         auto* old_buffer = this->m_data;
+        auto* capacity = &this->m_capacity;
         UninitializedCopyTo(new_buffer);
         this->m_data = new_buffer;
-        this->m_capacity = new_capacity;
+        *capacity = new_capacity;
         Free(old_buffer);
     }
 
