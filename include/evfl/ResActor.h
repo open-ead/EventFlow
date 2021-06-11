@@ -45,7 +45,7 @@ struct ResActor {
 };
 
 using ActionHandler = void (*)(ActionArg* arg, ActionDoneHandler* done_handler);
-using QueryHandler = void (*)(QueryArg* arg);
+using QueryHandler = int (*)(QueryArg* arg);
 
 class ActorBinding {
 public:
