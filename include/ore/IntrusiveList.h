@@ -1,10 +1,26 @@
 #pragma once
 
+#include <utility>
+
 namespace ore {
 
 class IntrusiveListNode {
 public:
     constexpr explicit IntrusiveListNode() { m_prev = m_next = this; }
+
+    IntrusiveListNode(const IntrusiveListNode&) = delete;
+    auto operator=(const IntrusiveListNode&) = delete;
+
+    IntrusiveListNode(IntrusiveListNode&& other) noexcept { *this = std::move(other); }
+    IntrusiveListNode& operator=(IntrusiveListNode&& other) noexcept {
+        auto* prev = other.m_prev;
+        other.m_prev = this;
+        prev->m_next = this;
+        m_prev = prev;
+        m_next = &other;
+        other.Erase();
+        return *this;
+    }
 
     IntrusiveListNode* Prev() const { return m_prev; }
     IntrusiveListNode* Next() const { return m_next; }
@@ -18,6 +34,14 @@ public:
         // This is a circular list.
         next_prev->m_next = this;
         m_prev = next_prev;
+    }
+
+    void InsertFront(IntrusiveListNode* node) {
+        auto* prev = node->m_prev;
+        node->m_prev = m_prev;
+        prev->m_next = this;
+        m_prev->m_next = node;
+        m_prev = prev;
     }
 
 private:
@@ -41,14 +65,7 @@ public:
 
     void Erase(T* item) { ItemToNode(item)->Erase(); }
 
-    void InsertFront(T* item) {
-        IntrusiveListNode* node = ItemToNode(item);
-        auto* prev = node->m_prev;
-        node->m_prev = m_node.m_prev;
-        prev->m_next = &m_node;
-        m_node.m_prev->m_next = node;
-        m_node.m_prev = prev;
-    }
+    void InsertFront(T* item) { m_node.InsertFront(ItemToNode(item)); }
 
 private:
     IntrusiveListNode* ItemToNode(T* item) const {

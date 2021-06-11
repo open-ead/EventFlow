@@ -1,6 +1,8 @@
 #include <algorithm>
+#include <evfl/Action.h>
 #include <evfl/Flowchart.h>
 #include <evfl/Param.h>
+#include <evfl/Query.h>
 #include <evfl/ResFlowchart.h>
 #include <iterator>
 #include <ore/Array.h>
@@ -130,12 +132,7 @@ void FlowchartContext::Clear() {
     while (!m_handlers.Empty()) {
         auto* handler = m_handlers.Front();
         handler->m_list_node.Erase();
-        handler->m_context = nullptr;
-        handler->m_obj = nullptr;
-        handler->m_node_idx = -1;
-        handler->m_node_counter = -1;
-        handler->m_handled = false;
-        handler->m_is_flowchart = true;
+        handler->Reset();
     }
 }
 
@@ -151,6 +148,262 @@ void FlowchartContext::CopyVariablePack(FlowchartContextNode& src, FlowchartCont
     FreeVariablePack(dst);
     dst.m_variable_pack = src.m_variable_pack;
     dst.m_owns_variable_pack = false;
+}
+
+bool FlowchartContext::ProcessContextNode(int node_idx) {
+    using State = FlowchartContextNode::State;
+    auto& node = GetNode(node_idx);
+    while (true) {
+        auto* obj = node.m_obj;
+        const auto* flowchart = obj->GetFlowchart();
+        const auto& event = flowchart->events.Get()[node.m_event_idx];
+
+        int next_event_idx = -1;
+
+        switch (event.type) {
+        case ResEvent::EventType::kAction: {
+            switch (node.m_state) {
+            case State::kNotInvoked: {
+                node.m_state = State::kInvoked;
+
+                const auto actor_idx = event.actor_idx;
+#ifdef EVFL_VER_LABO
+                const auto& actor = flowchart->actors.Get()[actor_idx];
+#else
+                const auto& actor = obj->GetFlowchart()->actors.Get()[actor_idx];
+#endif
+                const auto* actions = actor.actions.Get();
+                const auto* arg_name = actor.argument_name.Get();
+                const auto action_idx = event.actor_action_idx;
+
+                const auto* binding = &obj->GetActBinder().GetBindings()[actor_idx];
+                if (!arg_name->empty()) {
+                    binding = TrackBackArgumentActor(node_idx, *arg_name);
+                    if (!binding)
+                        return false;
+                }
+
+                const auto* action = binding->GetAction(*actions[action_idx].name.Get());
+                const ActionArg arg(this, node_idx, binding->GetUserData(), action->user_data,
+                                    node.m_variable_pack, &event);
+                ActionDoneHandler done_handler(obj, this, node_idx);
+                m_handlers.InsertFront(&done_handler);
+                action->handler(arg, std::move(done_handler));
+                return false;
+            }  // action case State::kNotInvoked
+            case State::kDone:
+                next_event_idx = event.next_event_idx;
+                break;
+            default:
+                return false;
+            }
+            break;
+        }  // case ResEvent::EventType::kAction
+
+        case ResEvent::EventType::kSwitch: {
+            if (node.m_state != State::kNotInvoked)
+                return false;
+
+            const auto actor_idx = event.actor_idx;
+            const auto& actor = flowchart->actors.Get()[actor_idx];
+            const auto* queries = actor.queries.Get();
+            const auto* arg_name = actor.argument_name.Get();
+            const auto query_idx = event.actor_query_idx;
+
+            const auto* binding = &obj->GetActBinder().GetBindings()[actor_idx];
+            if (!arg_name->empty()) {
+                binding = TrackBackArgumentActor(node_idx, *arg_name);
+                if (!binding)
+                    return false;
+            }
+
+            const auto* query = binding->GetQuery(*queries[query_idx].name.Get());
+            const QueryArg arg(this, node_idx, binding->GetUserData(), query->user_data, &event,
+                               node.m_variable_pack);
+            const int result = query->handler(arg);
+
+            next_event_idx = 0xffff;
+            ore::Array<const ResCase> cases{event.cases.Get(), event.num_cases};
+            for (const auto& case_ : cases) {
+                if (case_.value == result) {
+                    next_event_idx = case_.event_idx;
+                    break;
+                }
+            }
+            break;
+        }  // case ResEvent::EventType::kSwitch
+
+        case ResEvent::EventType::kFork: {
+            if (node.m_state != State::kNotInvoked)
+                return false;
+
+            node.m_event_idx = event.join_event_idx;
+            node.m_state = State::kInvoked;
+            UpdateNodeCounter(node_idx);
+
+            int prev_fork_node_idx = -1;
+            int first_fork_node_idx = -1;
+            int last_fork_node_idx = -1;
+
+            const ore::Array<const u16> forks{event.fork_event_indices.Get(), event.num_forks};
+            for (const auto& fork : forks) {
+                last_fork_node_idx = AllocNode();
+                auto& fork_node = GetNode(last_fork_node_idx);
+                fork_node.m_obj = obj;
+                fork_node.m_event_idx = fork;
+                fork_node.m_next_node_idx = node_idx;
+                fork_node.m_idx = prev_fork_node_idx;
+                fork_node.m_state = State::kNotInvoked;
+                if (first_fork_node_idx == -1)
+                    first_fork_node_idx = last_fork_node_idx;
+                CopyVariablePack(node, fork_node);
+                prev_fork_node_idx = last_fork_node_idx;
+            }
+
+            GetNode(first_fork_node_idx).m_idx = u16(last_fork_node_idx);
+            return true;
+        }  // case ResEvent::EventType::kFork
+
+        case ResEvent::EventType::kJoin: {
+            if (node.m_state != State::kDone)
+                return false;
+            next_event_idx = event.next_event_idx;
+            break;
+        }  // case ResEvent::EventType::kJoin
+
+        case ResEvent::EventType::kSubFlow: {
+            bool called;
+            bool valid_parameters;
+            bool tried_invoking = false;
+            switch (node.m_state) {
+            case State::kNotInvoked: {
+                tried_invoking = true;
+                node.m_state = State::kInvoked;
+
+                const ore::StringView sub_flow_flowchart = *event.sub_flow_flowchart.Get();
+                if (!sub_flow_flowchart.empty()) {
+                    obj = FindFlowchartObj(sub_flow_flowchart);
+                    if (obj == nullptr) {
+                        called = false;
+                        valid_parameters = false;
+                        break;
+                    }
+                }
+
+                const int entry_point_idx = obj->GetFlowchart()->entry_point_names.Get()->FindIndex(
+                    *event.sub_flow_entry_point.Get());
+                if (entry_point_idx == -1) {
+                    called = false;
+                    valid_parameters = false;
+                    break;
+                }
+
+                const auto& entry_point = obj->GetFlowchart()->entry_points.Get()[entry_point_idx];
+
+                const u16 main_event_idx = entry_point.main_event_idx;
+                if (main_event_idx == 0xffff) {
+                    node.m_state = State::kDone;
+                    called = false;
+                    valid_parameters = true;
+                    break;
+                }
+
+                // Optimization: if this is a tail call, we don't need to allocate a new node.
+                if (event.next_event_idx == 0xffff && event.params.Get() == nullptr) {
+                    node.m_obj = obj;
+                    node.m_event_idx = main_event_idx;
+                    node.m_state = State::kNotInvoked;
+                    AllocVariablePack(node, entry_point);
+                    UpdateNodeCounter(node_idx);
+                } else {
+                    const auto sub_flow_node_idx = AllocNode();
+                    auto& sub_flow_node = GetNode(sub_flow_node_idx);
+                    sub_flow_node.m_obj = obj;
+                    sub_flow_node.m_event_idx = main_event_idx;
+                    sub_flow_node.m_next_node_idx = node_idx;
+                    sub_flow_node.m_idx = sub_flow_node_idx;
+                    sub_flow_node.m_state = State::kNotInvoked;
+                    AllocVariablePack(sub_flow_node, entry_point);
+                }
+                CallSubFlowCallback(flowchart, &event, false);
+                called = true;
+                /// @bug valid_parameters should have been initialized to true here.
+                /// This bug causes LLVM to generate dumb code like
+                ///     mov w8, wzr; mov w9, wzr; orr w8, w8, w9   (for the failure cases above)
+                /// or more worryingly:
+                ///     mov w8, #1;  orr w8, w8, w9
+                /// where w9 is actually undefined!
+#ifdef AVOID_UB
+                valid_parameters = true;
+#endif
+                break;
+            }  // subflow case State::kNotInvoked
+            case State::kInvoked:
+                return false;
+            case State::kDone:
+                next_event_idx = event.next_event_idx;
+                CallSubFlowCallback(flowchart, &event, true);
+                break;
+            default:
+                break;
+            }
+            if (tried_invoking)
+                return valid_parameters || called;
+            break;
+        }  // case ResEvent::EventType::kSubFlow
+        }
+
+        // We are checking for 0xffff (a 0xffff that comes from the ResEvent data), *not* -1.
+        if (next_event_idx == 0xffff) {
+            bool ready = false;
+            auto* node_2 = &node;
+            if (node.m_idx != node_idx) {
+                do {
+                    node_2 = &GetNode(node_2->m_idx);
+                    ready |= node_2->m_state != State::kWaiting;
+                } while (node_2->m_idx != node_idx);
+            }
+
+            if (!ready) {
+                if (node.m_next_node_idx != 0xffff)
+                    GetNode(node.m_next_node_idx).m_state = State::kDone;
+
+                int next_node_idx = node_idx;
+                int next;
+                do {
+                    auto& node_to_free = GetNode(next_node_idx);
+                    next = node_to_free.m_idx;
+                    FreeVariablePack(node_to_free);
+                    node_to_free.Reset();
+                    node_to_free.m_next_node_idx = m_next_node_idx;
+                    node_to_free.m_state = State::kFree;
+                    m_next_node_idx = next_node_idx;
+                    --m_num_allocated_nodes;
+                    next_node_idx = next;
+                } while (next != node_idx);
+                return true;
+            }
+
+            if (event.type == ResEvent::EventType::kAction) {
+                node.m_state = State::kWaiting;
+                return true;
+            }
+
+            node_2->m_idx = node.m_idx;
+            auto& node_to_free = GetNode(node_idx);
+            FreeVariablePack(node_to_free);
+            node_to_free.Reset();
+            node_to_free.m_next_node_idx = m_next_node_idx;
+            node_to_free.m_state = State::kFree;
+            m_next_node_idx = node_idx;
+            --m_num_allocated_nodes;
+            return true;
+        }
+
+        node.m_event_idx = next_event_idx;
+        node.m_state = State::kNotInvoked;
+        UpdateNodeCounter(node_idx);
+    }
 }
 
 ActorBinding* FlowchartContext::TrackBackArgumentActor(int node_idx, const ore::StringView& name) {

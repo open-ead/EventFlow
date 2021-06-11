@@ -144,7 +144,7 @@ public:
     void Clear();
     void FreeVariablePack(FlowchartContextNode& node);
     void CopyVariablePack(FlowchartContextNode& src, FlowchartContextNode& dst);
-    bool ProcessContextNode(int idx);
+    bool ProcessContextNode(int node_idx);
     ActorBinding* TrackBackArgumentActor(int node_idx, const ore::StringView& name);
     bool IsUsing(const ResFlowchart* flowchart) const;
     bool IsPlaying(const ResFlowchart* flowchart) const;
@@ -165,6 +165,18 @@ private:
         m_nodes.Reset();
     }
 
+    void UpdateNodeCounter(int node_idx) {
+        auto& node = GetNode(node_idx);
+        node.m_node_counter = ++s_GlobalCounter;
+    }
+
+    void CallSubFlowCallback(const ResFlowchart* flowchart, const ResEvent* event, bool done) {
+#ifdef EVFL_VER_LABO
+        if (m_on_sub_flow_callback)
+            m_on_sub_flow_callback(this, flowchart, event, done);
+#endif
+    }
+
     static int s_GlobalCounter;
 
     EvflAllocator m_allocator;
@@ -172,8 +184,8 @@ private:
     ore::DynArrayList<FlowchartContextNode> m_nodes;
     ore::IntrusiveList<ActionDoneHandler> m_handlers;
 #ifdef EVFL_VER_LABO
-    void (*m_callback)(FlowchartContext* context, const ResFlowchart* flowchart,
-                       const ResEvent* event, bool) = nullptr;
+    void (*m_on_sub_flow_callback)(FlowchartContext* context, const ResFlowchart* flowchart,
+                                   const ResEvent* event, bool done) = nullptr;
 #endif
     MetaDataPack* m_metadata_pack = nullptr;
     void* _78 = nullptr;

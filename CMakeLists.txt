@@ -3,6 +3,7 @@ project(EventFlow CXX ASM)
 option(EVFL_VER_LABO "Build Labo's version of this library" OFF)
 
 add_library(evfl OBJECT
+  include/evfl/Action.h
   include/evfl/EvflAllocator.h
   include/evfl/Flowchart.h
   include/evfl/Param.h
@@ -26,7 +27,7 @@ add_library(evfl OBJECT
   include/ore/StringPool.h
   include/ore/StringView.h
   include/ore/Types.h
-  src/evfl/Actor.cpp
+  src/evfl/Action.cpp
   src/evfl/Param.cpp
   src/evfl/Flowchart.cpp
   src/evfl/FlowchartObj.cpp

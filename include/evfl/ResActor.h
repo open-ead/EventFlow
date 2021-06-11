@@ -3,8 +3,8 @@
 #include <cstddef>
 #include <ore/Array.h>
 #include <ore/BinaryFile.h>
-#include <ore/IntrusiveList.h>
 #include <ore/IterRange.h>
+#include <utility>
 
 namespace ore {
 struct ResEndian;
@@ -44,8 +44,8 @@ struct ResActor {
     u8 cut_number;
 };
 
-using ActionHandler = void (*)(ActionArg* arg, ActionDoneHandler* done_handler);
-using QueryHandler = int (*)(QueryArg* arg);
+using ActionHandler = void (*)(const ActionArg& arg, ActionDoneHandler done_handler);
+using QueryHandler = int (*)(const QueryArg& arg);
 
 class ActorBinding {
 public:
@@ -76,6 +76,9 @@ public:
     auto QueriesEnd() const { return m_queries.end(); }
 
     auto GetActor() const { return m_actor; }
+
+    void* GetUserData() const { return m_user_data; }
+    void SetUserData(void* user_data) { m_user_data = user_data; }
 
     bool IsInitialized() const { return m_initialized; }
     bool IsUsed() const { return m_is_used; }
@@ -133,6 +136,7 @@ public:
     const ore::Array<ActorBinding>* GetUsedResActors() const;
 
     ore::Array<ActorBinding>& GetBindings() { return m_bindings; }
+    const ore::Array<ActorBinding>& GetBindings() const { return m_bindings; }
     void IncrementNumActors() { ++m_event_used_actor_count; }
     void SetIsUsed() { m_is_used = true; }
     bool IsUsed() const { return m_is_used; }
@@ -147,31 +151,6 @@ private:
     ore::Allocator* m_allocator{};
     ore::SelfDestructingArray<ActorBinding> m_bindings{};
     bool m_is_used{};
-};
-
-class ActionDoneHandler {
-public:
-    ActionDoneHandler() = default;
-    ActionDoneHandler(FlowchartObj* obj, FlowchartContext* context, int node_idx);
-
-    FlowchartContextNode* GetContextNode();
-    void InvokeFromFlowchartImpl();
-    void InvokeFromTimelineImpl();
-    bool IsWaitingJoin();
-    bool CancelWaiting();
-
-    static constexpr size_t GetListNodeOffset() { return offsetof(ActionDoneHandler, m_list_node); }
-
-private:
-    friend class FlowchartContext;
-
-    ore::IntrusiveListNode m_list_node;
-    FlowchartContext* m_context = nullptr;
-    int m_node_idx = -1;
-    int m_node_counter = -1;
-    FlowchartObj* m_obj = nullptr;
-    bool m_handled = false;
-    bool m_is_flowchart = true;
 };
 
 void SwapEndian(ore::ResEndian* endian, ResActor* actor);
