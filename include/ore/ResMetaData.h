@@ -48,7 +48,7 @@ struct ResMetaData {
     Value value;
 };
 
-// FIXME
+// XXX: is this unused?
 struct ResUserData {
     ORE_ENUM(DataType, kInt, kFloat, kString, kWString, kStream)
 };
