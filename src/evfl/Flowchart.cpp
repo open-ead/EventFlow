@@ -325,7 +325,7 @@ bool FlowchartContext::ProcessContextNode(int node_idx) {
                     sub_flow_node.m_state = State::kNotInvoked;
                     AllocVariablePack(sub_flow_node, entry_point);
                 }
-                CallSubFlowCallback(flowchart, &event, false);
+                CallSubFlowCallback(flowchart, &event, SubFlowCallbackType::kEnter);
                 called = true;
                 /// @bug valid_parameters should have been initialized to true here.
                 /// This bug causes LLVM to generate dumb code like
@@ -342,7 +342,7 @@ bool FlowchartContext::ProcessContextNode(int node_idx) {
                 return false;
             case State::kDone:
                 next_event_idx = event.next_event_idx;
-                CallSubFlowCallback(flowchart, &event, true);
+                CallSubFlowCallback(flowchart, &event, SubFlowCallbackType::kLeave);
                 break;
             default:
                 break;

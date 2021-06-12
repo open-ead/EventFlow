@@ -23,6 +23,8 @@ struct ResEvent;
 struct ResFlowchart;
 class VariablePack;
 
+ORE_ENUM(SubFlowCallbackType, kEnter, kLeave)
+
 class FlowchartObj {
 public:
     class Builder {
@@ -170,10 +172,11 @@ private:
         node.m_node_counter = ++s_GlobalCounter;
     }
 
-    void CallSubFlowCallback(const ResFlowchart* flowchart, const ResEvent* event, bool done) {
+    void CallSubFlowCallback(const ResFlowchart* flowchart, const ResEvent* event,
+                             SubFlowCallbackType::Type type) {
 #ifdef EVFL_VER_LABO
         if (m_on_sub_flow_callback)
-            m_on_sub_flow_callback(this, flowchart, event, done);
+            m_on_sub_flow_callback(this, flowchart, event, type);
 #endif
     }
 
@@ -185,7 +188,7 @@ private:
     ore::IntrusiveList<ActionDoneHandler> m_handlers;
 #ifdef EVFL_VER_LABO
     void (*m_on_sub_flow_callback)(FlowchartContext* context, const ResFlowchart* flowchart,
-                                   const ResEvent* event, bool done) = nullptr;
+                                   const ResEvent* event, SubFlowCallbackType::Type type) = nullptr;
 #endif
     MetaDataPack* m_metadata_pack = nullptr;
     void* _78 = nullptr;

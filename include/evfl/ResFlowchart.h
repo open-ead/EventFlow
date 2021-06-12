@@ -14,8 +14,6 @@ namespace evfl {
 
 struct ResActor;
 
-ORE_ENUM(SubFlowCallbackType, kEnter, kLeave)
-
 struct ResCase {
     u32 value;
     u16 event_idx;
