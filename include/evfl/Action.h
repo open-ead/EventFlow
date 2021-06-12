@@ -1,6 +1,7 @@
 #pragma once
 
 #include <evfl/Param.h>
+#include <ore/EnumUtil.h>
 #include <ore/IntrusiveList.h>
 #include <utility>
 
@@ -12,6 +13,9 @@ class FlowchartObj;
 struct ResClip;
 struct ResEvent;
 class VariablePack;
+
+ORE_VALUED_ENUM(TriggerType, kFlowchart = 0, kClipEnter = 1, kClipLeave = 2, kOneshot = 3,
+                kNormal = 0, kEnter = 1, kLeave = 2)
 
 class ActionDoneHandler {
 public:
@@ -78,7 +82,7 @@ struct ActionArg {
         : param_accessor(context, node_idx), actor_user_data(actor_user_data_),
           action_user_data(action_user_data_), flowchart_ctx(context),
           variable_pack(variable_pack_), res(event_), timeline_time_delta(0.0),
-          timeline_trigger_type(0) {}
+          trigger_type(TriggerType::kFlowchart) {}
 
     ParamAccessor param_accessor;
     void* actor_user_data;
@@ -93,7 +97,7 @@ struct ActionArg {
         const ResClip* clip;
     } res;
     float timeline_time_delta;
-    int timeline_trigger_type;
+    TriggerType::Type trigger_type;
 };
 
 }  // namespace evfl
