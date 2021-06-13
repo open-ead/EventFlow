@@ -12,6 +12,7 @@ add_library(evfl OBJECT
   include/evfl/ResEventFlowFile.h
   include/evfl/ResFlowchart.h
   include/evfl/ResTimeline.h
+  include/evfl/TimelineObj.h
   include/ore/Allocator.h
   include/ore/Array.h
   include/ore/BinaryFile.h
@@ -31,6 +32,7 @@ add_library(evfl OBJECT
   src/evfl/Param.cpp
   src/evfl/Flowchart.cpp
   src/evfl/FlowchartObj.cpp
+  src/evfl/TimelineObj.cpp
   src/evfl/ResEventFlowFile.cpp
   src/evfl/ResTimeline.cpp
   src/evfl/ResActor.cpp

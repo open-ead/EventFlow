@@ -13,8 +13,6 @@ namespace evfl {
 
 struct ResActor;
 
-ORE_ENUM(TimelineState, kNotStarted, kPlaying, kStop, kPause)
-
 struct ResTrigger {
     u16 clip_index;
     u8 trigger_type;

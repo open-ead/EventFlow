@@ -124,12 +124,7 @@ public:
     [[gnu::always_inline]]
 #endif
     ~ActBinder() {
-        m_event_used_actor_count = 0;
-        if (auto* data = m_bindings.data()) {
-            m_bindings.ClearWithoutFreeing();
-            m_allocator->Free(data);
-        }
-        m_allocator = nullptr;
+        Reset();
     }
 
     u32 GetEventUsedActorCount() const { return m_event_used_actor_count; }
@@ -144,6 +139,15 @@ public:
     void UnbindAll() {
         for (auto it = m_bindings.begin(); it != m_bindings.end(); ++it)
             it->UnbindAll();
+    }
+
+    void Reset() {
+        m_event_used_actor_count = 0;
+        if (auto* data = m_bindings.data()) {
+            m_bindings.ClearWithoutFreeing();
+            m_allocator->Free(data);
+        }
+        m_allocator = nullptr;
     }
 
 private:
