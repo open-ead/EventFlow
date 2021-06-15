@@ -131,7 +131,10 @@ public:
     };
 
     FlowchartContext();
-    ~FlowchartContext() { Dispose(); }
+    ~FlowchartContext() {
+        Dispose();
+        m_objs.DestructElements();
+    }
 
     FlowchartContext(const FlowchartContext&) = delete;
     auto operator=(const FlowchartContext&) = delete;
