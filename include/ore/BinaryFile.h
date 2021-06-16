@@ -74,6 +74,10 @@ struct BinaryFileHeader {
 
 template <typename T>
 struct BinTString {
+    // Make it impossible to accidentally construct a (partial, broken) copy.
+    BinTString(const BinTString&) = delete;
+    auto operator=(const BinTString&) = delete;
+
     T* data() { return chars; }
     const T* data() const { return chars; }
 
