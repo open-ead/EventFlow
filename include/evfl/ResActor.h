@@ -29,6 +29,8 @@ struct ResQuery {
 };
 
 struct ResActor {
+    bool HasArgumentName() const { return !argument_name.Get()->empty(); }
+
     ore::BinTPtr<ore::BinString> name;
     ore::BinTPtr<ore::BinString> secondary_name;
     ore::BinTPtr<ore::BinString> argument_name;
