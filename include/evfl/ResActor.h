@@ -54,13 +54,13 @@ public:
     struct Action {
         ActionHandler handler{};
         void* user_data{};
-        const ore::BinTPtr<ore::BinString>* name{};
+        const ResAction* res_action{};
     };
 
     struct Query {
         QueryHandler handler{};
         void* user_data{};
-        const ore::BinTPtr<ore::BinString>* name{};
+        const ResQuery* res_query{};
     };
 
     ActorBinding() = default;
@@ -74,6 +74,10 @@ public:
     Query* GetQuery(const ore::StringView& name);
     const Query* GetQuery(const ore::StringView& name) const;
 
+    ore::DynArrayList<Action>& GetActions() { return m_actions; }
+    ore::DynArrayList<Query>& GetQueries() { return m_queries; }
+    const ore::DynArrayList<Action>& GetActions() const { return m_actions; }
+    const ore::DynArrayList<Query>& GetQueries() const { return m_queries; }
     auto ActionsEnd() const { return m_actions.end(); }
     auto QueriesEnd() const { return m_queries.end(); }
 

@@ -10,7 +10,7 @@ void ActorBinding::Register(const ResAction* action) {
         return;
 
     Action entry;
-    entry.name = &action->name;
+    entry.res_action = action;
     m_actions.emplace_back(entry);
 }
 
@@ -19,28 +19,32 @@ void ActorBinding::Register(const ResQuery* query) {
         return;
 
     Query entry;
-    entry.name = &query->name;
+    entry.res_query = query;
     m_queries.emplace_back(entry);
 }
 
 ActorBinding::Action* ActorBinding::GetAction(const ore::StringView& name) {
-    return std::find_if(m_actions.begin(), m_actions.end(),
-                        [name](const Action& action) { return name == *action.name->Get(); });
+    return std::find_if(m_actions.begin(), m_actions.end(), [name](const Action& action) {
+        return name == *action.res_action->name.Get();
+    });
 }
 
 const ActorBinding::Action* ActorBinding::GetAction(const ore::StringView& name) const {
-    return std::find_if(m_actions.begin(), m_actions.end(),
-                        [name](const Action& action) { return name == *action.name->Get(); });
+    return std::find_if(m_actions.begin(), m_actions.end(), [name](const Action& action) {
+        return name == *action.res_action->name.Get();
+    });
 }
 
 ActorBinding::Query* ActorBinding::GetQuery(const ore::StringView& name) {
-    return std::find_if(m_queries.begin(), m_queries.end(),
-                        [name](const Query& query) { return name == *query.name->Get(); });
+    return std::find_if(m_queries.begin(), m_queries.end(), [name](const Query& query) {
+        return name == *query.res_query->name.Get();
+    });
 }
 
 const ActorBinding::Query* ActorBinding::GetQuery(const ore::StringView& name) const {
-    return std::find_if(m_queries.begin(), m_queries.end(),
-                        [name](const Query& query) { return name == *query.name->Get(); });
+    return std::find_if(m_queries.begin(), m_queries.end(), [name](const Query& query) {
+        return name == *query.res_query->name.Get();
+    });
 }
 
 bool ActBinder::Builder::Build(evfl::ActBinder* binder, ore::Allocator* allocator,
