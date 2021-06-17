@@ -102,7 +102,7 @@ public:
         ORE_ENUM(BuildResultType, kSuccess, kInvalidOperation, kResFlowchartNotFound, kEntryPointNotFound)
 
         struct BuildResult {
-            BuildResultType::Type result{};
+            BuildResultType::Type result;
             /// Indicates which flowchart was required yet couldn't be found.
             ore::StringView missing_flowchart_name{};
             /// Indicates which entry point was required yet couldn't be found.
