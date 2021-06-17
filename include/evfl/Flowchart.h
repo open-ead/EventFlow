@@ -158,6 +158,8 @@ public:
     FlowchartContextNode& GetNode(int idx) { return m_nodes[idx]; }
     const FlowchartContextNode& GetNode(int idx) const { return m_nodes[idx]; }
     MetaDataPack* GetMetaDataPack() const { return m_metadata_pack; }
+    ore::Array<FlowchartObj>& GetObjs() { return m_objs; }
+    const ore::Array<FlowchartObj>& GetObjs() const { return m_objs; }
 
 private:
     void Dispose() {
