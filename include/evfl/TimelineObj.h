@@ -35,6 +35,19 @@ public:
     void AdvanceTimeTo(float time);
     bool RegisterSubtimeline(TimelineObj* obj);
 
+    ActBinder& GetActBinder() { return m_act_binder; }
+    const ActBinder& GetActBinder() const { return m_act_binder; }
+    const ore::Array<TimelineObj*>& GetSubTimelines() const { return m_sub_timelines; }
+    const ResTimeline* GetTimeline() const { return m_timeline; }
+    float GetTime() const { return m_time; }
+    float GetNewTime() const { return m_new_time; }
+    int GetLastTriggerIdx() const { return m_last_trigger_idx; }
+    int GetLastOneshotIdx() const { return m_last_oneshot_idx; }
+    int GetPlayCounter() const { return m_play_counter; }
+    bool IsStarted() const { return m_started; }
+    bool IsJumpedTime() const { return m_jumped_time; }
+    TimelineState::Type GetState() const { return m_state; }
+
 private:
     void CalcImpl();
     void JumpTimeToImpl(float time);
