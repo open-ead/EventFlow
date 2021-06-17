@@ -6,7 +6,7 @@ namespace evfl {
 
 struct AllocateArg {
     void* (*alloc)(size_t size, size_t alignment, void* userdata);
-    void* (*free)(void* ptr, void* userdata);
+    void (*free)(void* ptr, void* userdata);
     void* alloc_userdata;
     void* free_userdata;
 };
