@@ -26,23 +26,13 @@ void RegisterBindings(FlowchartObj* obj, ore::BitArray* visited_events, int even
         case ResEvent::EventType::kAction:
             if (actors[event.actor_idx].argument_name.Get()->empty()) {
                 auto* action = actors[event.actor_idx].actions.Get() + event.actor_action_idx;
-                auto& binding = obj->GetActBinder().GetBindings()[event.actor_idx];
-                if (!binding.IsUsed() && binding.GetActor()->argument_name.Get()->empty()) {
-                    obj->GetActBinder().IncrementNumActors();
-                    binding.SetIsUsed(true);
-                }
-                binding.Register(action);
+                obj->GetActBinder().RegisterAction(event.actor_idx, action);
             }
             break;
         case ResEvent::EventType::kSwitch:
             if (actors[event.actor_idx].argument_name.Get()->empty()) {
                 auto* query = actors[event.actor_idx].queries.Get() + event.actor_query_idx;
-                auto& binding = obj->GetActBinder().GetBindings()[event.actor_idx];
-                if (!binding.IsUsed() && binding.GetActor()->argument_name.Get()->empty()) {
-                    obj->GetActBinder().IncrementNumActors();
-                    binding.SetIsUsed(true);
-                }
-                binding.Register(query);
+                obj->GetActBinder().RegisterQuery(event.actor_idx, query);
             }
             break;
         default:
@@ -118,24 +108,12 @@ void RegisterBindingsForArguments(ActBinder& binder, int actor_idx,
 
     if (auto* actor = FindActor(entry)) {
         ore::Array<const ResAction> actions{actor->actions.Get(), actor->num_actions};
-        for (const auto& action : actions) {
-            auto& binding = binder.GetBindings()[actor_idx];
-            if (!binding.IsUsed() && binding.GetActor()->argument_name.Get()->empty()) {
-                binder.IncrementNumActors();
-                binding.SetIsUsed(true);
-            }
-            binding.Register(&action);
-        }
+        for (const auto& action : actions)
+            binder.RegisterAction(actor_idx, &action);
 
         ore::Array<const ResQuery> queries{actor->queries.Get(), actor->num_queries};
-        for (const auto& query : queries) {
-            auto& binding = binder.GetBindings()[actor_idx];
-            if (!binding.IsUsed() && binding.GetActor()->argument_name.Get()->empty()) {
-                binder.IncrementNumActors();
-                binding.SetIsUsed(true);
-            }
-            binding.Register(&query);
-        }
+        for (const auto& query : queries)
+            binder.RegisterQuery(actor_idx, &query);
     }
 
     const auto& entry_point = entry.flowchart->entry_points.Get()[entry.entry_point_idx];

@@ -143,6 +143,24 @@ public:
     void SetIsUsed() { m_is_used = true; }
     bool IsUsed() const { return m_is_used; }
 
+    void RegisterAction(int actor_idx, const evfl::ResAction* action) {
+        auto& binding = GetBindings()[actor_idx];
+        if (!binding.IsUsed() && binding.GetActor()->argument_name.Get()->empty()) {
+            IncrementNumActors();
+            binding.SetIsUsed(true);
+        }
+        binding.Register(action);
+    }
+
+    void RegisterQuery(int actor_idx, const evfl::ResQuery* query) {
+        auto& binding = GetBindings()[actor_idx];
+        if (!binding.IsUsed() && binding.GetActor()->argument_name.Get()->empty()) {
+            IncrementNumActors();
+            binding.SetIsUsed(true);
+        }
+        binding.Register(query);
+    }
+
     void UnbindAll() {
         for (auto it = m_bindings.begin(); it != m_bindings.end(); ++it)
             it->UnbindAll();
