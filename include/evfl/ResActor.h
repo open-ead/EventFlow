@@ -84,6 +84,7 @@ public:
 
     bool IsInitialized() const { return m_initialized; }
     bool IsUsed() const { return m_is_used; }
+    void SetInitialized(bool initialized) { m_initialized = initialized; }
     void SetIsUsed(bool used) { m_is_used = used; }
 
     void UnbindAll() {
