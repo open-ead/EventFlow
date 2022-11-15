@@ -26,15 +26,17 @@ constexpr int CountValues(const char* text_all, size_t text_all_len) {
 template <class T>
 struct Enum {
 public:
-    Enum() { T::Init(); }
+    struct Info {
+        Info() { T::Init(); }
 
-    static Enum<T>& Info() { return s_Info; }
+        StringView name{};
+        IterRange<StringView*> members{};
+    };
 
-    StringView name{};
-    IterRange<StringView*> members{};
+    static struct Info& Info() { return s_Info; }
 
 private:
-    static inline Enum<T> s_Info{};
+    static inline struct Info s_Info {};
 };
 
 #define ORE_ENUM(NAME, ...)                                                                        \
@@ -62,15 +64,17 @@ private:
 template <class T>
 class ValuedEnum {
 public:
-    ValuedEnum() { T::Init(); }
+    struct Info {
+        Info() { T::Init(); }
 
-    static Enum<T>& Info() { return s_Info; }
+        StringView name{};
+        IterRange<StringView*> members{};
+    };
 
-    StringView name{};
-    IterRange<StringView*> members{};
+    static struct Info& Info() { return s_Info; }
 
 private:
-    static inline Enum<T> s_Info{};
+    static inline struct Info s_Info {};
 };
 
 #define ORE_VALUED_ENUM(NAME, ...)                                                                 \

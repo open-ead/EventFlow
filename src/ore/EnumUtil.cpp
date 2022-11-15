@@ -10,4 +10,8 @@ int detail::EnumUtil::FindIndex(int value, const IterRange<const int*>& values) 
     return static_cast<int>(it - values.begin());
 }
 
+void detail::EnumUtil::Parse(const IterRange<StringView*>& out, StringView definition) {
+    // TODO
+}
+
 }  // namespace ore

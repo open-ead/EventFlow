@@ -93,10 +93,8 @@ public:
     };
 
     constexpr BitArray() = default;
-    constexpr BitArray(void* buffer, int num_bits) { SetData(buffer, num_bits); }
-    constexpr BitArray(ore::Allocator* allocator, int num_bits) {
-        AllocateBuffer(allocator, num_bits);
-    }
+    BitArray(void* buffer, int num_bits) { SetData(buffer, num_bits); }
+    BitArray(ore::Allocator* allocator, int num_bits) { AllocateBuffer(allocator, num_bits); }
 
     void SetData(void* buffer, int num_bits) {
         m_words = reinterpret_cast<Word*>(buffer);
