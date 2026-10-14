@@ -139,6 +139,7 @@ public:
     FlowchartContext(const FlowchartContext&) = delete;
     auto operator=(const FlowchartContext&) = delete;
 
+    bool IsInitialized() const { return m_obj_idx != -1 && m_active_entry_point_idx != -1; }
     void Start(MetaDataPack* pack);
     int AllocNode();
     void AllocVariablePack(FlowchartContextNode& node, const ResEntryPoint& entry_point);

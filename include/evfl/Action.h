@@ -50,6 +50,20 @@ public:
         return *this;
     }
 
+    void Invoke() {
+        if (m_is_flowchart) {
+            if (!m_context || m_node_idx < 0 || !m_obj || m_handled)
+                return;
+            m_handled = true;
+            InvokeFromFlowchartImpl();
+        } else {
+            if (!m_timeline_obj || m_handled)
+                return;
+            m_handled = true;
+            InvokeFromTimelineImpl();
+        }
+    }
+
     FlowchartContextNode* GetContextNode();
     void InvokeFromFlowchartImpl();
     void InvokeFromTimelineImpl();
