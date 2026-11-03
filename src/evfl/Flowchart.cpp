@@ -445,27 +445,18 @@ bool FlowchartContext::IsUsing(const ResFlowchart* flowchart) const {
     return obj && obj->GetActBinder().IsUsed();
 }
 
-// NON_MATCHING: if (((state | 4) & 7) != 4) -- extremely weird check
 bool FlowchartContext::IsPlaying(const ResFlowchart* flowchart) const {
-    int state = 2;
     for (int i = 0, n = m_nodes.size(); i < n; ++i) {
-        if (m_nodes[i].IsInvalidOrFree()) {
-            state = 4;
-        } else {
-            const auto flowchart_name = ore::StringView(*flowchart->name.Get());
-            const auto node_flowchart_name =
-                ore::StringView(*m_nodes[i].m_obj->GetFlowchart()->name.Get());
-            if (node_flowchart_name == flowchart_name) {
-                state = 1;
-            } else {
-                state = 0;
-            }
-        }
+        if (m_nodes[i].IsInvalidOrFree())
+            continue;
 
-        if (((state | 4) & 7) != 4)
-            break;
+        const auto flowchart_name = ore::StringView(*flowchart->name.Get());
+        const auto node_flowchart_name =
+            ore::StringView(*m_nodes[i].m_obj->GetFlowchart()->name.Get());
+        if (node_flowchart_name == flowchart_name)
+            return true;
     }
-    return state != 2;
+    return false;
 }
 
 const ore::Array<ActorBinding>*
