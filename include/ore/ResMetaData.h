@@ -17,6 +17,13 @@ struct ResMetaData {
         BinTPtr<BinString> sub_name;
     };
 
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    struct CustomKey {
+        BinTPtr<BinString> name;
+        BinTPtr<BinString> key;
+    };
+#endif
+
     union Value {
         BinTPtr<ResMetaData> container;
         // Also used for booleans. Anything that is != 0 is treated as true.
@@ -25,9 +32,16 @@ struct ResMetaData {
         BinTPtr<BinString> str;
         BinTPtr<BinWString> wstr;
         ActorIdentifier actor;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+        CustomKey custom_key;
+#endif
     };
 
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    ORE_ENUM(DataType, kArgument, kContainer, kInt, kBool, kFloat, kString, kWString, kIntArray, kBoolArray, kFloatArray, kStringArray, kWStringArray, kActorIdentifier, kCustomKey)
+#else
     ORE_ENUM(DataType, kArgument, kContainer, kInt, kBool, kFloat, kString, kWString, kIntArray, kBoolArray, kFloatArray, kStringArray, kWStringArray, kActorIdentifier)
+#endif
 
     /// @warning Only usable if type == kContainer.
     const ResMetaData* Get(const StringView& key, DataType::Type expected_type) const {

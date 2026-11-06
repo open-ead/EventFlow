@@ -5,6 +5,10 @@
 #include <ore/BinaryFile.h>
 #include <ore/ResDic.h>
 
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+#include <cstring>
+#endif
+
 namespace evfl {
 
 namespace {
@@ -195,6 +199,9 @@ ore::StringView ParamAccessor::TrackBackArgument(const ore::ResMetaData** out_me
                                                  const MetaDataPack** out_metadata_pack,
                                                  const VariablePack** out_variable_pack,
                                                  FlowchartObj** out_obj,
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+                                                 ore::StringView* out_custom_key,
+#endif
                                                  const ore::StringView& argument) const {
     *out_metadata = nullptr;
     *out_metadata_pack = nullptr;
@@ -235,6 +242,15 @@ ore::StringView ParamAccessor::TrackBackArgument(const ore::ResMetaData** out_me
             continue;
         }
 
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+        const auto* custom_key = params->Get(ret, Type::kCustomKey);
+        if (custom_key) {
+            if (out_custom_key)
+                *out_custom_key = *custom_key->value.custom_key.key.Get();
+            return *custom_key->value.custom_key.name.Get();
+        }
+#endif
+
         *out_metadata = params;
         if (out_obj)
             *out_obj = node.GetObj();
@@ -257,8 +273,24 @@ bool ParamAccessor::FindInt(int* value, const ore::StringView& name) const {
     const ore::ResMetaData* metadata;
     const MetaDataPack* metadata_pack;
     const VariablePack* variable_pack;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    ore::StringView custom_key;
+    const auto real_name =
+        TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, &custom_key, name);
+
+    if (!custom_key.empty()) {
+        CustomKeyResult result;
+        if (!CallCustomKeyHandler(result, Type::kInt, real_name, custom_key) ||
+            result.type != CustomKeyResult::Type::kInt) {
+            return false;
+        }
+        *value = result.value.i;
+        return true;
+    }
+#else
     const auto real_name =
         TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, name);
+#endif
 
     if (metadata) {
         const auto* entry = metadata->Get(real_name, Type::kInt);
@@ -287,8 +319,24 @@ bool ParamAccessor::FindBool(bool* value, const ore::StringView& name) const {
     const ore::ResMetaData* metadata;
     const MetaDataPack* metadata_pack;
     const VariablePack* variable_pack;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    ore::StringView custom_key;
+    const auto real_name =
+        TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, &custom_key, name);
+
+    if (!custom_key.empty()) {
+        CustomKeyResult result;
+        if (!CallCustomKeyHandler(result, Type::kBool, real_name, custom_key) ||
+            result.type != CustomKeyResult::Type::kBool) {
+            return false;
+        }
+        *value = result.value.b;
+        return true;
+    }
+#else
     const auto real_name =
         TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, name);
+#endif
 
     if (metadata) {
         const auto* entry = metadata->Get(real_name, Type::kBool);
@@ -317,8 +365,24 @@ bool ParamAccessor::FindFloat(float* value, const ore::StringView& name) const {
     const ore::ResMetaData* metadata;
     const MetaDataPack* metadata_pack;
     const VariablePack* variable_pack;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    ore::StringView custom_key;
+    const auto real_name =
+        TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, &custom_key, name);
+
+    if (!custom_key.empty()) {
+        CustomKeyResult result;
+        if (!CallCustomKeyHandler(result, Type::kFloat, real_name, custom_key) ||
+            result.type != CustomKeyResult::Type::kFloat) {
+            return false;
+        }
+        *value = result.value.f;
+        return true;
+    }
+#else
     const auto real_name =
         TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, name);
+#endif
 
     if (metadata) {
         const auto* entry = metadata->Get(real_name, Type::kFloat);
@@ -347,8 +411,24 @@ bool ParamAccessor::FindString(ore::StringView* value, const ore::StringView& na
     const ore::ResMetaData* metadata;
     const MetaDataPack* metadata_pack;
     const VariablePack* variable_pack;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    ore::StringView custom_key;
+    const auto real_name =
+        TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, &custom_key, name);
+
+    if (!custom_key.empty()) {
+        CustomKeyResult result;
+        if (!CallCustomKeyHandler(result, Type::kString, real_name, custom_key) ||
+            result.type != CustomKeyResult::Type::kString) {
+            return false;
+        }
+        *value = result.value.str;
+        return true;
+    }
+#else
     const auto real_name =
         TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, name);
+#endif
 
     if (metadata) {
         const auto* entry = metadata->Get(real_name, Type::kString);
@@ -375,8 +455,24 @@ bool ParamAccessor::FindWString(ore::WStringView* value, const ore::StringView& 
     const ore::ResMetaData* metadata;
     const MetaDataPack* metadata_pack;
     const VariablePack* variable_pack;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    ore::StringView custom_key;
+    const auto real_name =
+        TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, &custom_key, name);
+
+    if (!custom_key.empty()) {
+        CustomKeyResult result;
+        if (!CallCustomKeyHandler(result, Type::kWString, real_name, custom_key) ||
+            result.type != CustomKeyResult::Type::kWString) {
+            return false;
+        }
+        *value = result.value.wstr;
+        return true;
+    }
+#else
     const auto real_name =
         TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, name);
+#endif
 
     if (metadata) {
         const auto* entry = metadata->Get(real_name, Type::kWString);
@@ -404,8 +500,24 @@ bool ParamAccessor::FindIntArray(ParamAccessor::IntRange* value,
     const ore::ResMetaData* metadata;
     const MetaDataPack* metadata_pack;
     const VariablePack* variable_pack;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    ore::StringView custom_key;
+    const auto real_name =
+        TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, &custom_key, name);
+
+    if (!custom_key.empty()) {
+        CustomKeyResult result;
+        if (!CallCustomKeyHandler(result, Type::kIntArray, real_name, custom_key) ||
+            result.type != CustomKeyResult::Type::kIntArray) {
+            return false;
+        }
+        *value = result.value.int_array;
+        return true;
+    }
+#else
     const auto real_name =
         TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, name);
+#endif
 
     if (metadata) {
         const auto* entry = metadata->Get(real_name, Type::kIntArray);
@@ -437,8 +549,24 @@ bool ParamAccessor::FindFloatArray(ParamAccessor::FloatRange* value,
     const ore::ResMetaData* metadata;
     const MetaDataPack* metadata_pack;
     const VariablePack* variable_pack;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    ore::StringView custom_key;
+    const auto real_name =
+        TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, &custom_key, name);
+
+    if (!custom_key.empty()) {
+        CustomKeyResult result;
+        if (!CallCustomKeyHandler(result, Type::kFloatArray, real_name, custom_key) ||
+            result.type != CustomKeyResult::Type::kFloatArray) {
+            return false;
+        }
+        *value = result.value.float_array;
+        return true;
+    }
+#else
     const auto real_name =
         TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, name);
+#endif
 
     if (metadata) {
         const auto* entry = metadata->Get(real_name, Type::kFloatArray);
@@ -470,8 +598,24 @@ bool ParamAccessor::FindStringArray(ParamAccessor::StringRange* value,
     const ore::ResMetaData* metadata;
     const MetaDataPack* metadata_pack;
     const VariablePack* variable_pack;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    ore::StringView custom_key;
+    const auto real_name =
+        TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, &custom_key, name);
+
+    if (!custom_key.empty()) {
+        CustomKeyResult result;
+        if (!CallCustomKeyHandler(result, Type::kStringArray, real_name, custom_key) ||
+            result.type != CustomKeyResult::Type::kStringArray) {
+            return false;
+        }
+        *value = result.value.str_array;
+        return true;
+    }
+#else
     const auto real_name =
         TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, name);
+#endif
 
     if (metadata) {
         const auto* entry = metadata->Get(real_name, Type::kStringArray);
@@ -495,8 +639,24 @@ bool ParamAccessor::FindWStringArray(ParamAccessor::WStringRange* value,
     const ore::ResMetaData* metadata;
     const MetaDataPack* metadata_pack;
     const VariablePack* variable_pack;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    ore::StringView custom_key;
+    const auto real_name =
+        TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, &custom_key, name);
+
+    if (!custom_key.empty()) {
+        CustomKeyResult result;
+        if (!CallCustomKeyHandler(result, Type::kWStringArray, real_name, custom_key) ||
+            result.type != CustomKeyResult::Type::kWStringArray) {
+            return false;
+        }
+        *value = result.value.wstr_array;
+        return true;
+    }
+#else
     const auto real_name =
         TrackBackArgument(&metadata, &metadata_pack, &variable_pack, nullptr, name);
+#endif
 
     if (metadata) {
         const auto* entry = metadata->Get(real_name, Type::kWStringArray);
@@ -508,6 +668,49 @@ bool ParamAccessor::FindWStringArray(ParamAccessor::WStringRange* value,
 
     return false;
 }
+
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+CustomKeyHandler FlowchartContext::FindCustomKeyHandler(ore::StringView key) const {
+    if (std::strlen(key.data()) == 0)
+        return nullptr;
+
+    for (const auto& entry : m_custom_key_handlers) {
+        if (std::strncmp(entry.key, key.data(), sizeof(entry.key)) == 0)
+            return entry.handler;
+    }
+
+    return nullptr;
+}
+
+bool FlowchartContext::RegisterCustomKeyHandler(ore::StringView key, CustomKeyHandler handler) {
+    if (key.empty() || key.size() >= cMaxCustomKeyLength)
+        return false;
+
+    for (auto& entry : m_custom_key_handlers) {
+        const ore::StringView entry_key = entry.key;
+        if (entry_key.empty() || entry_key == key) {
+            std::memset(entry.key, 0, sizeof(entry.key));
+            std::memcpy(entry.key, key.data(), key.size());
+            entry.handler = handler;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool ParamAccessor::CallCustomKeyHandler(CustomKeyResult& result, Type type,
+                                         const ore::StringView& name,
+                                         const ore::StringView& custom_key) const {
+    const auto handler = m_context->FindCustomKeyHandler(custom_key);
+    if (!handler)
+        return false;
+
+    const CustomKeyRequest request{type, name, custom_key, m_context};
+    result.accessor = this;
+    return handler(result, request);
+}
+#endif
 
 VariablePack::VariableType VariablePack::GetVariableType(const ore::StringView& name) const {
     if (!Contains(name))
@@ -647,6 +850,9 @@ void VariablePack::Init(AllocateArg arg, const ResEntryPoint* entry_point) {
         case ore::ResMetaData::DataType::kStringArray:
         case ore::ResMetaData::DataType::kWStringArray:
         case ore::ResMetaData::DataType::kActorIdentifier:
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+        case ore::ResMetaData::DataType::kCustomKey:
+#endif
             break;
         }
         ++def;

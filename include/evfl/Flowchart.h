@@ -25,6 +25,13 @@ class VariablePack;
 
 ORE_ENUM(SubFlowCallbackType, kEnter, kLeave)
 
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+struct CustomKeyRequest;
+struct CustomKeyResult;
+
+using CustomKeyHandler = bool (*)(CustomKeyResult& result, const CustomKeyRequest& request);
+#endif
+
 class FlowchartObj {
 public:
     class Builder {
@@ -155,6 +162,11 @@ public:
     bool IsPlaying(const ResFlowchart* flowchart) const;
     const ore::Array<ActorBinding>* GetUsedResActors(ore::StringView flowchart_name) const;
 
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    bool RegisterCustomKeyHandler(ore::StringView key, CustomKeyHandler handler);
+    CustomKeyHandler FindCustomKeyHandler(ore::StringView key) const;
+#endif
+
     FlowchartContextNode& GetNode(int idx) { return m_nodes[idx]; }
     const FlowchartContextNode& GetNode(int idx) const { return m_nodes[idx]; }
     MetaDataPack* GetMetaDataPack() const { return m_metadata_pack; }
@@ -162,6 +174,16 @@ public:
     const ore::Array<FlowchartObj>& GetObjs() const { return m_objs; }
 
 private:
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    static constexpr int cNumCustomKeyHandlers = 16;
+    static constexpr int cMaxCustomKeyLength = 0x38;
+
+    struct CustomKeyHandlerEntry {
+        char key[cMaxCustomKeyLength];
+        CustomKeyHandler handler;
+    };
+
+#endif
     void Dispose() {
         m_obj_idx = -1;
         m_active_entry_point_idx = -1;
@@ -203,6 +225,9 @@ private:
     int m_active_entry_point_idx = -1;
     bool m_is_processing = false;
     u8 _91 = 0;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    CustomKeyHandlerEntry m_custom_key_handlers[cNumCustomKeyHandlers]{};
+#endif
 };
 
 }  // namespace evfl

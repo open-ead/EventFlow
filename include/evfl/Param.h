@@ -19,6 +19,9 @@ namespace evfl {
 
 class FlowchartContext;
 class FlowchartObj;
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+struct CustomKeyResult;
+#endif
 struct ResEntryPoint;
 
 class MetaDataPack {
@@ -161,12 +164,29 @@ public:
     /// @param out_metadata_pack  Must be nonnull.
     /// @param out_variable_pack  Must be nonnull.
     /// @param out_obj  May be null.
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    /// @param out_custom_key  May be null. Only written if the argument resolves to a custom key.
+#endif
     /// @param argument  Name of the argument to search for.
     ore::StringView TrackBackArgument(const ore::ResMetaData** out_metadata,
                                       const MetaDataPack** out_metadata_pack,
                                       const VariablePack** out_variable_pack,
                                       FlowchartObj** out_obj,
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+                                      ore::StringView* out_custom_key,
+#endif
                                       const ore::StringView& argument) const;
+
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    ore::StringView TrackBackArgument(const ore::ResMetaData** out_metadata,
+                                      const MetaDataPack** out_metadata_pack,
+                                      const VariablePack** out_variable_pack,
+                                      FlowchartObj** out_obj,
+                                      const ore::StringView& argument) const {
+        return TrackBackArgument(out_metadata, out_metadata_pack, out_variable_pack, out_obj,
+                                 nullptr, argument);
+    }
+#endif
 
     int GetInt(int idx) const;
     bool FindInt(int* value, const ore::StringView& name) const;
@@ -199,10 +219,57 @@ public:
                              const ore::StringView& name) const;
 
 private:
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    bool CallCustomKeyHandler(CustomKeyResult& result, Type type, const ore::StringView& name,
+                              const ore::StringView& custom_key) const;
+#endif
+
     const ore::ResMetaData* m_metadata = nullptr;
     const FlowchartContext* m_context = nullptr;
     int m_node_idx = -1;
     u32 m_node_counter = -1;
 };
+
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+struct CustomKeyRequest {
+    /// The parameter type the caller asks for.
+    ParamAccessor::Type type;
+    ore::StringView name;
+    ore::StringView custom_key;
+    const FlowchartContext* context;
+};
+
+struct CustomKeyResult {
+    enum class Type : u32 {
+        kInt = 0,
+        kFloat = 1,
+        kBool = 2,
+        kString = 3,
+        kIntArray = 4,
+        kFloatArray = 5,
+        kStringArray = 6,
+        kWString = 7,
+        kWStringArray = 8,
+    };
+
+    union Value {
+        Value() : float_array() {}
+
+        int i;
+        float f;
+        bool b;
+        ore::StringView str;
+        ore::WStringView wstr;
+        ParamAccessor::IntRange int_array;
+        ParamAccessor::FloatRange float_array;
+        ParamAccessor::StringRange str_array;
+        ParamAccessor::WStringRange wstr_array;
+    };
+
+    Value value;
+    Type type{};
+    const ParamAccessor* accessor = nullptr;
+};
+#endif
 
 }  // namespace evfl

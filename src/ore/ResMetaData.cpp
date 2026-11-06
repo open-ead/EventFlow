@@ -13,7 +13,11 @@ static void SwapEndianImpl(ResEndian* endian, ResMetaData* res) {
     case ResMetaData::DataType::kArgument:
     case ResMetaData::DataType::kString:
     case ResMetaData::DataType::kStringArray:
-    case ResMetaData::DataType::kActorIdentifier: {
+    case ResMetaData::DataType::kActorIdentifier:
+#ifdef EVFL_FEATURE_CUSTOM_KEY
+    case ResMetaData::DataType::kCustomKey:
+#endif
+    {
         if (res->num_items == 0)
             break;
         BinString* str = res->value.str.ToPtr(endian->base);
