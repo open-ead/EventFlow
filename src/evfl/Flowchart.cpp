@@ -63,6 +63,9 @@ int FlowchartContext::AllocNode() {
     node.m_variable_pack = nullptr;
     node.m_node_counter = ++s_GlobalCounter;
     node.m_state = FlowchartContextNode::State::kInvalid;
+#ifdef EVFL_FORMAT_VERSION_4
+    node.m_last_stack_value = FlowchartContextNode::kInvalidStackValue;
+#endif
     ++m_num_allocated_nodes;
     return idx;
 }
@@ -351,6 +354,83 @@ bool FlowchartContext::ProcessContextNode(int node_idx) {
                 return valid_parameters || called;
             break;
         }  // case ResEvent::EventType::kSubFlow
+
+#ifdef EVFL_FORMAT_VERSION_4
+        case ResEvent::EventType::kSubFlowSwitch: {
+            switch (node.m_state) {
+            case State::kNotInvoked: {
+                node.m_state = State::kInvoked;
+
+                const ore::StringView sub_flow_flowchart = *event.sub_flow_switch_flowchart.Get();
+                if (!sub_flow_flowchart.empty()) {
+                    obj = FindFlowchartObj(sub_flow_flowchart);
+                    if (obj == nullptr)
+                        return false;
+                }
+
+                const int entry_point_idx = obj->GetFlowchart()->entry_point_names.Get()->FindIndex(
+                    *event.sub_flow_switch_entry_point.Get());
+                if (entry_point_idx == -1)
+                    return false;
+
+                const auto& entry_point = obj->GetFlowchart()->entry_points.Get()[entry_point_idx];
+
+                const u16 main_event_idx = entry_point.main_event_idx;
+                if (main_event_idx == 0xffff)
+                    return false;
+
+                const auto sub_flow_node_idx = AllocNode();
+                auto& sub_flow_node = GetNode(sub_flow_node_idx);
+                sub_flow_node.m_obj = obj;
+                sub_flow_node.m_event_idx = main_event_idx;
+                sub_flow_node.m_next_node_idx = node_idx;
+                sub_flow_node.m_idx = sub_flow_node_idx;
+                sub_flow_node.m_state = State::kNotInvoked;
+                AllocVariablePack(sub_flow_node, entry_point);
+                CallSubFlowCallback(flowchart, &event, SubFlowCallbackType::kEnter);
+                return true;
+            }  // sub flow switch case State::kNotInvoked
+            case State::kInvoked:
+                return false;
+            case State::kDone: {
+                next_event_idx = 0xffff;
+                // Owl has a non-fatal assertion here:
+                //   EVFL_WARN(
+                //     pContextNode->lastStackValue != FlowchartContextNode::kInvalidStackValue,
+                //     "[evfl]
+                //     "戻り値が不正な値です。戻り値のないフローが存在していないか確認してください。"
+                //     "Event: %.*s, Flowchart: %.*s", /*...*/);
+                // ("Invalid return value. Check that there is no flow without a return value.")
+                if (node.m_last_stack_value != FlowchartContextNode::kInvalidStackValue) {
+                    const auto return_value = u32(node.m_last_stack_value);
+                    node.m_last_stack_value = FlowchartContextNode::kInvalidStackValue;
+
+                    ore::Array<const ResCase> cases{event.cases.Get(), event.num_cases};
+                    for (const auto& case_ : cases) {
+                        if (case_.value == return_value) {
+                            next_event_idx = case_.event_idx;
+                            break;
+                        }
+                    }
+                }
+                CallSubFlowCallback(flowchart, &event, SubFlowCallbackType::kLeave);
+                break;
+            }  // sub flow switch case State::kDone
+            default:
+                break;
+            }
+            break;
+        }  // case ResEvent::EventType::kSubFlowSwitch
+
+        case ResEvent::EventType::kReturn: {
+            // @bug The return value is sign-extended, so 0xffffffff would
+            // end up setting m_last_stack_value to kInvalidStackValue.
+            if (node.m_next_node_idx != 0xffff)
+                GetNode(node.m_next_node_idx).m_last_stack_value = s32(event.return_value);
+            next_event_idx = 0xffff;
+            break;
+        }  // case ResEvent::EventType::kReturn
+#endif
         }
 
         // We are checking for 0xffff (a 0xffff that comes from the ResEvent data), *not* -1.
@@ -488,8 +568,8 @@ bool CheckSubFlowCalls(FlowchartContext::Builder::BuildResult* result,
 
     for (u16 i = 0; i != entry_point->num_sub_flow_event_indices; ++i) {
         const auto& event = flowchart->events.Get()[entry_point->sub_flow_event_indices.Get()[i]];
-        ore::StringView sub_flow_flowchart = *event.sub_flow_flowchart.Get();
-        const ore::StringView sub_flow_entry_point = *event.sub_flow_entry_point.Get();
+        ore::StringView sub_flow_flowchart = event.GetSubFlowFlowchart();
+        const ore::StringView sub_flow_entry_point = event.GetSubFlowEntryPoint();
 
         auto sub_flowchart_idx = flowchart_idx;
         auto* sub_flowchart_res = flowchart;

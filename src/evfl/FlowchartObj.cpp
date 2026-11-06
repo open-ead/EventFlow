@@ -61,6 +61,17 @@ void RegisterBindings(FlowchartObj* obj, ore::BitArray* visited_events, int even
             event_idx = event.join_event_idx;
             break;
         }
+#ifdef EVFL_FORMAT_VERSION_4
+        case ResEvent::EventType::kSubFlowSwitch: {
+            ore::Array<const ResCase> cases{event.cases.Get(), event.num_cases};
+            std::for_each(cases.begin(), cases.end(), [&](const ResCase& case_) {
+                RegisterBindings(obj, visited_events, case_.event_idx);
+            });
+            return;
+        }
+        case ResEvent::EventType::kReturn:
+            return;
+#endif
         }
     }
 }
@@ -121,8 +132,8 @@ void RegisterBindingsForArguments(ActBinder& binder, int actor_idx,
                                                  entry_point.num_sub_flow_event_indices};
     for (auto sub_flow_event_idx : sub_flow_event_indices) {
         const auto& event = entry.flowchart->events.Get()[sub_flow_event_idx];
-        const ore::StringView sub_flow_flowchart = *event.sub_flow_flowchart.Get();
-        const ore::StringView sub_flow_entry_point = *event.sub_flow_entry_point.Get();
+        const ore::StringView sub_flow_flowchart = event.GetSubFlowFlowchart();
+        const ore::StringView sub_flow_entry_point = event.GetSubFlowEntryPoint();
 
         auto* params = event.params.Get();
         if (!params)
@@ -177,8 +188,8 @@ void RegisterBindingsForActorIdentifiers(FlowchartObj* obj,
         if (!params)
             continue;
 
-        const ore::StringView sub_flow_flowchart = *event.sub_flow_flowchart.Get();
-        const ore::StringView sub_flow_entry_point = *event.sub_flow_entry_point.Get();
+        const ore::StringView sub_flow_flowchart = event.GetSubFlowFlowchart();
+        const ore::StringView sub_flow_entry_point = event.GetSubFlowEntryPoint();
         const ResFlowchart* arg_flowchart = flowchart;
         if (!sub_flow_flowchart.empty()) {
             arg_flowchart =

@@ -2,6 +2,7 @@ project(EventFlow CXX ASM)
 
 option(EVFL_VER_LABO "Build Labo's version of this library" OFF)
 option(EVFL_FEATURE_CUSTOM_KEY "Support custom key parameters" OFF)
+option(EVFL_FORMAT_VERSION_4 "Use BFEVFL version 4" OFF)
 
 add_library(evfl OBJECT
   include/evfl/Action.h
@@ -58,4 +59,8 @@ endif()
 
 if(EVFL_FEATURE_CUSTOM_KEY)
   target_compile_definitions(evfl PUBLIC EVFL_FEATURE_CUSTOM_KEY=1)
+endif()
+
+if(EVFL_FORMAT_VERSION_4)
+  target_compile_definitions(evfl PUBLIC EVFL_FORMAT_VERSION_4=1)
 endif()

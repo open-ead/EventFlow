@@ -82,6 +82,18 @@ static void SwapEndianForEventData(ore::ResEndian* endian, ResEvent* event) {
         if (auto* params = event->params.ToPtr(endian->base))
             SwapEndian(endian, params);
         break;
+#ifdef EVFL_FORMAT_VERSION_4
+    case ResEvent::EventType::kSubFlowSwitch: {
+        ore::Array<ResCase> cases{event->cases.ToPtr(endian->base), event->num_cases};
+        for (auto& case_ : cases)
+            SwapEndian(endian, &case_);
+        if (auto* params = event->params.ToPtr(endian->base))
+            SwapEndian(endian, params);
+        break;
+    }
+    case ResEvent::EventType::kReturn:
+        break;
+#endif
     }
 }
 
@@ -105,6 +117,14 @@ static void SwapEndianForEventFields(ore::ResEndian* endian, ResEvent* event) {
     case ResEvent::EventType::kSubFlow:
         SwapEndian(&event->next_event_idx);
         break;
+#ifdef EVFL_FORMAT_VERSION_4
+    case ResEvent::EventType::kSubFlowSwitch:
+        SwapEndian(&event->num_cases);
+        break;
+    case ResEvent::EventType::kReturn:
+        SwapEndian(&event->return_value);
+        break;
+#endif
     }
 }
 

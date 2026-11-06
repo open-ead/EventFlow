@@ -20,7 +20,41 @@ struct ResCase {
 };
 
 struct ResEvent {
+#ifdef EVFL_FORMAT_VERSION_4
+    ORE_ENUM(EventType, kAction, kSwitch, kFork, kJoin, kSubFlow, kSubFlowSwitch, kReturn)
+#else
     ORE_ENUM(EventType, kAction, kSwitch, kFork, kJoin, kSubFlow)
+#endif
+
+    ore::StringView GetSubFlowFlowchart() const {
+#ifdef EVFL_FORMAT_VERSION_4
+        switch (type) {
+        case EventType::kSubFlow:
+            return *sub_flow_flowchart.Get();
+        case EventType::kSubFlowSwitch:
+            return *sub_flow_switch_flowchart.Get();
+        default:
+            return "";
+        }
+#else
+        return *sub_flow_flowchart.Get();
+#endif
+    }
+
+    ore::StringView GetSubFlowEntryPoint() const {
+#ifdef EVFL_FORMAT_VERSION_4
+        switch (type) {
+        case EventType::kSubFlow:
+            return *sub_flow_entry_point.Get();
+        case EventType::kSubFlowSwitch:
+            return *sub_flow_switch_entry_point.Get();
+        default:
+            return "";
+        }
+#else
+        return *sub_flow_entry_point.Get();
+#endif
+    }
 
     ore::BinTPtr<ore::BinString> name;
     ore::SizedEnum<EventType::Type, u8> type;
@@ -28,35 +62,43 @@ struct ResEvent {
     union {
         // Action, Join, Sub flow
         u16 next_event_idx;
-        // Switch
+        // Switch, Sub flow switch
         u16 num_cases;
         // Fork
         u16 num_forks;
     };
 
     union {
-        // Action, Switch
-        u16 actor_idx;
-        // Fork
-        u16 join_event_idx;
+        struct {
+            union {
+                // Action, Switch
+                u16 actor_idx;
+                // Fork
+                u16 join_event_idx;
+            };
+
+            union {
+                // Action
+                u16 actor_action_idx;
+                // Switch
+                u16 actor_query_idx;
+            };
+        };
+#ifdef EVFL_FORMAT_VERSION_4
+        // Return
+        u32 return_value;
+#endif
     };
 
     union {
-        // Action
-        u16 actor_action_idx;
-        // Switch
-        u16 actor_query_idx;
-    };
-
-    union {
-        // Action, Switch, Sub flow
+        // Action, Switch, Sub flow, Sub flow switch
         ore::BinTPtr<ore::ResMetaData> params;
         // Fork
         ore::BinTPtr<u16> fork_event_indices;
     };
 
     union {
-        // Switch
+        // Switch, Sub flow switch
         ore::BinTPtr<ResCase> cases;
         // Sub flow
         ore::BinTPtr<ore::BinString> sub_flow_flowchart;
@@ -65,8 +107,23 @@ struct ResEvent {
     union {
         // Sub flow
         ore::BinTPtr<ore::BinString> sub_flow_entry_point;
+#ifdef EVFL_FORMAT_VERSION_4
+        // Sub flow switch
+        ore::BinTPtr<ore::BinString> sub_flow_switch_flowchart;
+#endif
     };
+
+#ifdef EVFL_FORMAT_VERSION_4
+    // Sub flow switch
+    ore::BinTPtr<ore::BinString> sub_flow_switch_entry_point;
+#endif
 };
+
+#ifdef EVFL_FORMAT_VERSION_4
+static_assert(sizeof(ResEvent) == 0x30);
+#else
+static_assert(sizeof(ResEvent) == 0x28);
+#endif
 
 struct ResVariableDef {
     union Value {

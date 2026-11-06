@@ -224,6 +224,9 @@ ore::StringView ParamAccessor::TrackBackArgument(const ore::ResMetaData** out_me
 
         if (!((event.type == ResEvent::EventType::kAction && i == m_node_idx) ||
               (event.type == ResEvent::EventType::kSwitch && i == m_node_idx) ||
+#ifdef EVFL_FORMAT_VERSION_4
+              event.type == ResEvent::EventType::kSubFlowSwitch ||
+#endif
               event.type == ResEvent::EventType::kSubFlow)) {
             continue;
         }

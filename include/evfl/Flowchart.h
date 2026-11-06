@@ -66,6 +66,10 @@ class FlowchartContextNode {
 public:
     ORE_ENUM(State, kInvalid, kFree, kNotInvoked, kInvoked, kDone, kWaiting)
 
+#ifdef EVFL_FORMAT_VERSION_4
+    static constexpr s64 kInvalidStackValue = -1;
+#endif
+
     FlowchartContextNode() { Reset(); }
 
     bool IsInvalidOrFree() const { return m_state == State::kInvalid || m_state == State::kFree; }
@@ -75,6 +79,9 @@ public:
     u16 GetEventIdx() const { return m_event_idx; }
     u16 GetNextNodeIdx() const { return m_next_node_idx; }
     State::Type GetState() const { return m_state; }
+#ifdef EVFL_FORMAT_VERSION_4
+    s64 GetLastStackValue() const { return m_last_stack_value; }
+#endif
 
     void Reset() {
         m_node_counter = -1;
@@ -85,6 +92,9 @@ public:
         m_state = State::kInvalid;
         m_variable_pack = nullptr;
         m_owns_variable_pack = false;
+#ifdef EVFL_FORMAT_VERSION_4
+        m_last_stack_value = kInvalidStackValue;
+#endif
     }
 
 private:
@@ -99,7 +109,16 @@ private:
     u16 m_idx;
     ore::SizedEnum<State::Type, u8> m_state;
     bool m_owns_variable_pack;
+#ifdef EVFL_FORMAT_VERSION_4
+    s64 m_last_stack_value;
+#endif
 };
+
+#ifdef EVFL_FORMAT_VERSION_4
+static_assert(sizeof(FlowchartContextNode) == 0x28);
+#else
+static_assert(sizeof(FlowchartContextNode) == 0x20);
+#endif
 
 class FlowchartContext {
 public:

@@ -21,7 +21,11 @@ constexpr T MakeMagic(std::string_view magic) {
 }
 
 bool ResEventFlowFile::IsValid(void* data) {
+#ifdef EVFL_FORMAT_VERSION_4
+    return static_cast<ore::BinaryFileHeader*>(data)->IsValid(MakeMagic<u64>("BFEVFL"), 0, 4, 0, 0);
+#else
     return static_cast<ore::BinaryFileHeader*>(data)->IsValid(MakeMagic<u64>("BFEVFL"), 0, 3, 0, 0);
+#endif
 }
 
 ResEventFlowFile* ResEventFlowFile::ResCast(void* data) {
