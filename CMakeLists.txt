@@ -1,6 +1,7 @@
 project(EventFlow CXX ASM)
 
-option(EVFL_VER_LABO "Build Labo's version of this library" OFF)
+option(EVFL_FEATURE_SUB_FLOW_CALLBACK "Support sub flow enter/leave callbacks" OFF)
+option(EVFL_FEATURE_ACTION_REUSES_FLOWCHART "Read action actors through the cached flowchart (newer library versions)" OFF)
 option(EVFL_FEATURE_CUSTOM_KEY "Support custom key parameters" OFF)
 option(EVFL_FORMAT_VERSION_4 "Use BFEVFL version 4" OFF)
 
@@ -53,8 +54,12 @@ target_compile_options(evfl PRIVATE -fno-strict-aliasing)
 target_compile_options(evfl PRIVATE -Wno-invalid-offsetof)
 target_include_directories(evfl PUBLIC include/)
 
-if(EVFL_VER_LABO)
-  target_compile_definitions(evfl PUBLIC EVFL_VER_LABO=1)
+if(EVFL_FEATURE_SUB_FLOW_CALLBACK)
+  target_compile_definitions(evfl PUBLIC EVFL_FEATURE_SUB_FLOW_CALLBACK=1)
+endif()
+
+if(EVFL_FEATURE_ACTION_REUSES_FLOWCHART)
+  target_compile_definitions(evfl PUBLIC EVFL_FEATURE_ACTION_REUSES_FLOWCHART=1)
 endif()
 
 if(EVFL_FEATURE_CUSTOM_KEY)

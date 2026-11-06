@@ -220,7 +220,7 @@ private:
 
     void CallSubFlowCallback(const ResFlowchart* flowchart, const ResEvent* event,
                              SubFlowCallbackType::Type type) {
-#ifdef EVFL_VER_LABO
+#ifdef EVFL_FEATURE_SUB_FLOW_CALLBACK
         if (m_on_sub_flow_callback)
             m_on_sub_flow_callback(this, flowchart, event, type);
 #endif
@@ -232,7 +232,7 @@ private:
     ore::Array<FlowchartObj> m_objs;
     ore::DynArrayList<FlowchartContextNode> m_nodes;
     ore::IntrusiveList<ActionDoneHandler> m_handlers;
-#ifdef EVFL_VER_LABO
+#ifdef EVFL_FEATURE_SUB_FLOW_CALLBACK
     void (*m_on_sub_flow_callback)(FlowchartContext* context, const ResFlowchart* flowchart,
                                    const ResEvent* event, SubFlowCallbackType::Type type) = nullptr;
 #endif

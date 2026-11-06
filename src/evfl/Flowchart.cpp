@@ -170,7 +170,7 @@ bool FlowchartContext::ProcessContextNode(int node_idx) {
                 node.m_state = State::kInvoked;
 
                 const auto actor_idx = event.actor_idx;
-#ifdef EVFL_VER_LABO
+#ifdef EVFL_FEATURE_ACTION_REUSES_FLOWCHART
                 const auto& actor = flowchart->actors.Get()[actor_idx];
 #else
                 const auto& actor = obj->GetFlowchart()->actors.Get()[actor_idx];
